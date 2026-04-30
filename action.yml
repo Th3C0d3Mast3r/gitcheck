@@ -1,0 +1,18 @@
+name: 'Git-Check Security Scanner'
+description: 'Scans your PRs and commits for hardcoded API keys and malicious shell scripts.'
+author: 'Git-Check'
+branding:
+  icon: 'shield'
+  color: 'blue'
+
+inputs:
+  github_token:
+    description: 'GitHub token for API access (e.g., to post comments on PRs)'
+    required: true
+    default: '${{ github.token }}'
+
+runs:
+  using: 'docker'
+  image: 'docker/Dockerfile'
+  args:
+    - ${{ inputs.github_token }}
