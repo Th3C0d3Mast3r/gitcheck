@@ -1,0 +1,35 @@
+{
+    "BANNED_BASE_IMAGES": {
+        "ubuntu:18.04": {
+            "reason": "Ubuntu 18.04 is End-of-Life (EOL) and no longer receives security updates.",
+            "severity": "CRITICAL"
+        },
+        "python:3.6": {
+            "reason": "Python 3.6 is End-of-Life (EOL). Use Python 3.9+.",
+            "severity": "CRITICAL"
+        },
+        "node:14": {
+            "reason": "Node 14 is End-of-Life (EOL). Use Node 18+.",
+            "severity": "CRITICAL"
+        }
+    },
+    "BANNED_TAGS": {
+        "latest": {
+            "reason": "The ':latest' tag is mutable. An unexpected update could break your build or introduce vulnerabilities. Pin to a specific version.",
+            "severity": "HIGH"
+        }
+    },
+    "DANGEROUS_COMMANDS": {
+        "curl | sh": {
+            "regex": "curl\\s+.*\\|\\s*(?:sh|bash)",
+            "reason": "Piping curl directly to a shell allows unverified remote code execution during build.",
+            "severity": "CRITICAL"
+        },
+        "wget | sh": {
+            "regex": "wget\\s+.*\\|\\s*(?:sh|bash)",
+            "reason": "Piping wget directly to a shell allows unverified remote code execution during build.",
+            "severity": "CRITICAL"
+        }
+    },
+    "REQUIRE_NON_ROOT": true
+}

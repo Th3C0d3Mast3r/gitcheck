@@ -1,0 +1,26 @@
+{
+    "TERRAFORM_RULES": {
+        "public_s3_bucket": {
+            "regex": "acl\\s*=\\s*[\"'](?:public-read|public-read-write)[\"']",
+            "reason": "S3 buckets should never have public read or write ACLs. This is a massive data leak risk.",
+            "severity": "CRITICAL"
+        },
+        "open_ingress_sg": {
+            "regex": "cidr_blocks\\s*=\\s*\\[\\s*[\"']0\\.0\\.0\\.0/0[\"']\\s*\\]",
+            "reason": "Security group allows ingress from any IP address (0.0.0.0/0). Enforce Least Privilege.",
+            "severity": "HIGH"
+        }
+    },
+    "KUBERNETES_RULES": {
+        "privileged_pod": {
+            "regex": "privileged\\s*:\\s*true",
+            "reason": "Running a privileged pod gives it root capabilities on the host node. This allows container escapes.",
+            "severity": "CRITICAL"
+        },
+        "root_user": {
+            "regex": "runAsUser\\s*:\\s*0",
+            "reason": "Running a pod as user 0 (root) allows container escapes. Use a non-root user ID.",
+            "severity": "HIGH"
+        }
+    }
+}

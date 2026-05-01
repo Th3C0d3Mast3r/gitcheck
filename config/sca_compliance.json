@@ -1,0 +1,28 @@
+{
+    "BANNED_PACKAGES": {
+        "requests-v2": {
+            "name": "requests-v2",
+            "reason": "Malicious typo-squatting package imitating 'requests'.",
+            "severity": "CRITICAL"
+        },
+        "log4j": {
+            "name": "log4j",
+            "reason": "Known high-risk vulnerabilities (e.g., Log4Shell). Must use log4j2.",
+            "severity": "CRITICAL"
+        }
+    },
+    "BANNED_LICENSES": {
+        "GPL-3.0": {
+            "name": "GPL-3.0",
+            "reason": "Incompatible with our proprietary software distribution model.",
+            "severity": "HIGH"
+        }
+    },
+    "BANNED_AUTHORS": {
+        "evil_hacker_corp": {
+            "name": "evil_hacker_corp",
+            "reason": "Geopolitical sanctions blocklist.",
+            "severity": "CRITICAL"
+        }
+    }
+}
