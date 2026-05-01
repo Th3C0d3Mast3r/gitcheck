@@ -11,10 +11,7 @@ except FileNotFoundError:
     IAC_RULES = {"TERRAFORM_RULES": {}, "KUBERNETES_RULES": {}}
 
 def scan_for_iac(chunk):
-    """
-    Scans Infrastructure as Code files (Terraform/Kubernetes) 
-    for real-world cloud misconfigurations using regex rules.
-    """
+   
     findings = []
     
     tf_rules = IAC_RULES.get("TERRAFORM_RULES", {})
@@ -22,8 +19,7 @@ def scan_for_iac(chunk):
     
     path = chunk.file_path.lower()
     
-    # We only scan the newly added code to avoid yelling at developers 
-    # for old tech debt they aren't currently touching.
+    
     for line_num, line in enumerate(chunk.added_lines, start=1):
         
         # 1. Terraform Scanning

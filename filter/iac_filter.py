@@ -3,10 +3,7 @@ from typing import List
 from ingestion import Diff
 
 def should_inspect_for_iac(chunk: Diff) -> bool:
-    """
-    IaC scanner only cares about Infrastructure as Code files.
-    Specifically Terraform (.tf) and Kubernetes/Ansible (.yaml, .yml).
-    """
+   
     if chunk.is_bin:
         return False
         

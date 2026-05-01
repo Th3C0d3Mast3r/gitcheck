@@ -11,10 +11,7 @@ except FileNotFoundError:
     SCA_RULES = {"BANNED_PACKAGES": {}, "BANNED_LICENSES": {}, "BANNED_AUTHORS": {}}
 
 def parse_requirements_txt(content):
-    """
-    Simple parser for Python's requirements.txt.
-    Extracts the base package name (e.g., 'requests==2.31.0' -> 'requests')
-    """
+   
     packages = []
     for line in content.splitlines():
         line = line.strip()
@@ -27,10 +24,7 @@ def parse_requirements_txt(content):
     return packages
 
 def parse_package_json(content):
-    """
-    Simple parser for Node.js package.json.
-    Extracts package names from dependencies and devDependencies.
-    """
+   
     packages = []
     try:
         data = json.loads(content)
@@ -43,9 +37,7 @@ def parse_package_json(content):
     return [p.lower() for p in packages]
 
 def scan_for_sca(chunk):
-    """
-    Scans dependency files for banned packages listed in sca_compliance.json.
-    """
+   
     findings = []
     basename = os.path.basename(chunk.file_path).lower()
     

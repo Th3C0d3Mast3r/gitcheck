@@ -3,16 +3,14 @@ from typing import List
 from ingestion import Diff
 
 def should_inspect_for_container(chunk: Diff) -> bool:
-    """
-    Container scanner only cares about Dockerfiles.
-    """
+
     if chunk.is_bin:
         return False
         
     path = chunk.file_path.lower()
     basename = os.path.basename(path)
     
-    # Check if the file is named Dockerfile or ends with .dockerfile
+   
     if basename == "dockerfile" or path.endswith(".dockerfile"):
         return True
         
