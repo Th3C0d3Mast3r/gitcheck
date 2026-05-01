@@ -20,3 +20,18 @@ So, as you can see, the directories in this repo are named- PRETTY OBVIOUSLY, li
 > [!NOTE] 
 > USING THIS REPO THE PROPER WAY
 !-->
+
+---
+
+### PROGRESS TILL NOW
+- [x] Written AST Engine for the Parser
+- [x] base code for `main.py` in /cli written
+- [x] base Dockerfile written in /docker
+- [x] code for the ingestion of the git-diff written
+- [x] `pyproject.toml` configured, the single point of truth for the project
+- [x] requirements.txt written
+- [ ] git leaks and stuff remain.
+- [ ] check for malicious scripts
+- [ ] scoring the malicious things
+- [ ] regex matching for API keys remain
+- [ ] json reporting and overall push score remains
