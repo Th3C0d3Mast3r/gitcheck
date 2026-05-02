@@ -11,6 +11,6 @@ RUN pip install -e .
 COPY . .
 
 RUN useradd -m gitcheck
-RUN USER gitcheck
+USER gitcheck
 
 ENTRYPOINT ["gitcheck"]
