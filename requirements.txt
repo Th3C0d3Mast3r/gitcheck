@@ -1,0 +1,7 @@
+click
+GitPython
+tree-sitter
+tree-sitter-python
+tree-sitter-javascript
+PyYAML
+rich

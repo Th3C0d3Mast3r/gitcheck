@@ -1,0 +1,42 @@
+{
+  "Reverse Shell (Bash)": {
+    "regex": "bash\\s+-i\\s+>&\\s+/dev/tcp/\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}/\\d+",
+    "severity": "CRITICAL",
+    "description": "Reverse shell connection detected via bash."
+  },
+  "Reverse Shell (Netcat)": {
+    "regex": "nc\\s+-e\\s+/bin/(ba)?sh\\s+\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}",
+    "severity": "CRITICAL",
+    "description": "Reverse shell connection detected via netcat."
+  },
+  "Data Exfiltration (Curl/Wget)": {
+    "regex": "(curl|wget).*\\|\\s*(bash|sh|zsh)",
+    "severity": "HIGH",
+    "description": "Piping internet download directly into shell."
+  },
+  "Data Exfiltration (Sensitive Files)": {
+    "regex": "(curl|wget).*(--data|-d).*\\/etc\\/(passwd|shadow)|\\.ssh\\/id_rsa",
+    "severity": "CRITICAL",
+    "description": "Exfiltrating sensitive local files via curl/wget."
+  },
+  "Destructive Command (rm -rf)": {
+    "regex": "rm\\s+-rf\\s+/",
+    "severity": "CRITICAL",
+    "description": "Destructive system deletion command."
+  },
+  "Obfuscation (Base64 Execution)": {
+    "regex": "echo\\s+.*\\s+\\|\\s+base64\\s+-d\\s+\\|\\s*(sh|bash)",
+    "severity": "HIGH",
+    "description": "Execution of base64 decoded payload."
+  },
+  "Persistence (Cron)": {
+    "regex": "echo\\s+.*\\s+>>\\s+/etc/crontab",
+    "severity": "HIGH",
+    "description": "Adding cron jobs for persistence."
+  },
+  "SSH Key Manipulation": {
+    "regex": "echo\\s+.*\\s+>>\\s+.*\\.ssh/authorized_keys",
+    "severity": "CRITICAL",
+    "description": "Adding keys to authorized_keys for backdoor access."
+  }
+}

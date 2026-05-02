@@ -1,0 +1,6 @@
+name: 'GitCheck Security Scanner'
+description: 'Pre-merge CI/CD gate for malicious scripts, secrets, and dangerous logic.'
+authors: 'Th3C0d3Mast3r | Piyush123abc'
+runs:
+  using: 'docker'
+  image: 'docker/Dockerfile'

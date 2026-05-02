@@ -20,3 +20,22 @@ So, as you can see, the directories in this repo are named- PRETTY OBVIOUSLY, li
 > [!NOTE] 
 > USING THIS REPO THE PROPER WAY
 !-->
+
+---
+
+### PROGRESS TILL NOW
+- [x] Written AST Engine for the Parser
+- [x] Base code for `main.py` in /cli written and updated as a Multi-Track Orchestrator
+- [x] Base Dockerfile written in /docker
+- [x] Code for the ingestion of the git-diff written
+- [x] `pyproject.toml` configured, the single point of truth for the project
+- [x] requirements.txt written
+- [x] **Implemented Modular Filtering Pipeline** (AST, Secrets, SCA, Container, IaC)
+- [x] **Implemented Secret Scanner** (Regex matching for API keys, Git leaks, Internal IPs, PII)
+- [x] **Implemented SCA Scanner** (Software Composition Analysis for dependencies)
+- [x] **Implemented Container Scanner** (Dockerfile static analysis & base image rules)
+- [x] **Implemented IaC Scanner** (Terraform and Kubernetes misconfiguration detection)
+- [x] Created JSON-based Compliance Rules Engine (`/config`) for all scanners
+- [ ] Scoring the malicious things (Aggregation Layer)
+- [ ] JSON reporting and overall push score remains (Integrations Layer)
+- [ ] Context-aware taint analysis and dynamic testing (Future Scope)
