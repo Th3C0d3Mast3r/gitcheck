@@ -10,4 +10,4 @@ dependencies = [
 ]
 
 [project.scripts]
-gitcheck="cli.main:main"
+gitcheck="cli.main:run_pipeline"
