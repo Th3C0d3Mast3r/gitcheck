@@ -39,3 +39,4 @@ So, as you can see, the directories in this repo are named- PRETTY OBVIOUSLY, li
 - [ ] Scoring the malicious things (Aggregation Layer)
 - [ ] JSON reporting and overall push score remains (Integrations Layer)
 - [ ] Context-aware taint analysis and dynamic testing (Future Scope)
+- [ ] SAST and DAST based integration in the Jenkinsfile for local vul checking
