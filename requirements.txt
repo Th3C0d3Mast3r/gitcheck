@@ -5,3 +5,5 @@ tree-sitter-python
 tree-sitter-javascript
 PyYAML
 rich
+pytest
+pytest-mock
