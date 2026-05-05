@@ -1,4 +1,6 @@
 import sys
+import subprocess    #New change for running git commands
+import os    #New change for handling file paths
 from ingestion import GitIngestion
 from filter import filter_chunks
 from filter.secret_filter import filter_chunks_for_secrets
@@ -13,6 +15,55 @@ from analysis.container_scanner import scan_for_container
 from analysis.iac_scanner import scan_for_iac
 from analysis.malicious_scanner import scan_for_malicious
 from aggregation import compute_score
+
+def is_merge_commit():    #New function to check if the current commit is a merge commit
+    """Checks if the current HEAD is a merge commit."""
+    try:
+        # Run the command you tested: returns parent hashes
+        result = subprocess.check_output(['git', 'rev-list', '--parents', '-n', '1', 'HEAD']).decode().split()
+        # A standard commit has 2 items (ID and 1 parent). A merge has 3+ items.
+        return len(result) > 2
+    except Exception:
+        return False
+
+def check_reporting_rules():    #New function to determine if the pipeline should run based on user preference
+    """
+    Determines if the pipeline should run based on user preference.
+    1 = Always
+    2 = Only when not merging
+    3 = Never
+    """
+    # GitHub Actions passes 'args' from action.yml as command line arguments
+    mode = sys.argv[1] if len(sys.argv) > 1 else "1"
+
+    if mode == "3":
+        print("[-] GitCheck: Mode 3 (Never) active. Exiting without report.")
+        sys.exit(0)
+
+    if mode == "2" and is_merge_commit():
+        print("[-] GitCheck: Mode 2 (No Merges) active. Merge detected. Exiting.")
+        sys.exit(0)
+    
+    print(f"[+] GitCheck: Mode {mode} active. Proceeding with scan...")
+
+def generate_github_summary(all_findings, score, verdict):  #New function to create a GitHub Actions summary report, which is more visually appealing and user-friendly than just printing to console. This will show up in the "Summary" tab of the GitHub Action run, making it easy for developers to see the results at a glance.
+    # GitHub creates a temporary file path for summaries
+    summary_env = os.environ.get('GITHUB_STEP_SUMMARY')
+    if not summary_env:
+        return # Not running in GitHub Actions
+
+    with open(summary_env, 'a') as f:
+        f.write(f"## 🛡️ GitCheck Security Scan\n")
+        color = "🔴" if verdict == "BLOCK" else "🟢"
+        f.write(f"### Verdict: {color} {verdict} (Score: {score}/100)\n\n")
+        
+        if all_findings:
+            f.write("| Issue | Status |\n")
+            f.write("| :--- | :--- |\n")
+            for issue in all_findings:
+                f.write(f"| {issue} | ⚠️ Detected |\n")
+        else:
+            f.write("✅ No vulnerabilities detected in this push.")
 
 def run_pipeline():
     print("Starting ingestion phase...")
@@ -85,9 +136,14 @@ def run_pipeline():
     print("       SCAN RESULTS")
     print("="*30)
     
+    
+    #Modified to generate GitHub summary report even when no findings are found, to ensure visibility in the UI
+    
     if not all_findings:
         print(" All clear, No secrets or malicious code found.")
-        sys.exit(0)
+        # Create a "Clear" report for GitHub UI
+        generate_github_summary([], 0, "PASS")
+        return "PASS" 
     else:
         print(f" WARNING! Found {len(all_findings)} issues:")
         for issue in all_findings:
@@ -96,15 +152,29 @@ def run_pipeline():
         print("\n[*] Computing Aggregated Score...")
         total_score, verdict = compute_score(all_findings)
         
+        # 1. Print to console for the user to see in logs
         print(f"    -> Total Risk Score: {total_score}")
         print(f"    -> Final Verdict: {verdict}")
-        
-        if verdict == "BLOCK":
-            print("\n[!] VERDICT IS BLOCK (>=75). FAILING CI/CD PIPELINE.")
-            sys.exit(1)
-        else:
-            print("\n[✓] VERDICT IS PASS OR WARN. ALLOWING MERGE.")
-            sys.exit(0)
 
-if __name__ == "__main__":
-    run_pipeline()
+        # 2. Generate the "Proper Report" UI for GitHub
+        generate_github_summary(all_findings, total_score, verdict)
+        
+        # 3. Send the verdict back to the main block
+        return verdict
+
+if __name__ == "__main__":  #Main block to run the pipeline and handle exit codes based on verdict
+    user_pref = sys.argv[1] if len(sys.argv) > 1 else "1"
+
+    # Step 1: Check if we should skip
+    check_reporting_rules(user_pref)
+
+    # Step 2: Run the scan and catch the verdict
+    final_verdict = run_pipeline(user_pref)
+
+    # Step 3: Handle the Exit Code (This actually stops the CI/CD pipeline)
+    if final_verdict == "BLOCK":
+        print("\n[!] VERDICT IS BLOCK. FAILING PIPELINE.")
+        sys.exit(1)
+    else:
+        print("\n[✓] VERDICT IS PASS/WARN. PIPELINE SUCCEEDED.")
+        sys.exit(0)
