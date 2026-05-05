@@ -14,3 +14,5 @@ RUN useradd -m gitcheck
 USER gitcheck
 
 ENTRYPOINT ["gitcheck"]
+
+# ENTRYPOINT ["python", "/app/main.py"]  Can we add this??

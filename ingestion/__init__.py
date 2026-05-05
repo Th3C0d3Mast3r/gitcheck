@@ -21,7 +21,7 @@ class GitIngestion:
     def get_diff(self, base_ref: str, head:str="HEAD")->List[Diff]:
         # here, the base_ref => things before the commit
         # and the head => new incoming things that came
-        diffs=self.repo.commit(base_ref).diff(head)
+        diffs=self.repo.commit(base_ref).diff(head, create_patch=True)
         chunks=[]
         for d in diffs:
             try:

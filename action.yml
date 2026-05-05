@@ -1,6 +1,14 @@
 name: 'GitCheck Security Scanner'
 description: 'Pre-merge CI/CD gate for malicious scripts, secrets, and dangerous logic.'
 authors: 'Th3C0d3Mast3r | Piyush123abc'
+inputs:
+  report_mode:
+    description: '1: Always, 2: Not on merges, 3: Never'
+    required: true
+    default: '1'
+
 runs:
   using: 'docker'
-  image: 'docker/Dockerfile'
+  image: 'docker/Dockerfile' # Ensure this path is correct relative to root
+  args:
+    - ${{ inputs.report_mode }} # This passes the choice into the container
