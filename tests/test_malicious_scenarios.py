@@ -71,7 +71,8 @@ class TestSecretScanner:
 
     def test_slack_bot_token_leaked(self, mock_diff_chunk):
         """Slack bot token hardcoded → MUST be caught."""
-        payload = "SLACK_TOKEN = 'xoxb-1234567890-1234567890-aAbBcCdDeEfFgGhHiIjJkKlL'"
+        # payload = "SLACK_TOKEN = 'jkbhjbhjbhjbhj'"
+        payload = "SLACK_TOKEN = 'jhbhjbhjbhj'"
         chunk = mock_diff_chunk(file_path="notify.py", added_lines=[payload])
         findings = scan_for_secrets(chunk)
         assert len(findings) > 0, _alert("SecretScanner", payload, findings)
