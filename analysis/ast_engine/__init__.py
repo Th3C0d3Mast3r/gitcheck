@@ -21,7 +21,7 @@ def scan_python(source: str)->List[ASTFinding]:
 
     def walk(node):
         if node.type=="call":
-            func=node.child_by_field_name(function)
+            func=node.child_by_field_name("function")
             if func:
                 name=source[func.start_byte:func.end_byte]
                 if any(danger in name for danger in DANGER):
