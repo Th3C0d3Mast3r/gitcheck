@@ -1,6 +1,9 @@
 name: 'GitCheck Security Scanner'
 description: 'Pre-merge CI/CD gate for malicious scripts, secrets, and dangerous logic.'
-authors: 'Th3C0d3Mast3r | Piyush123abc'
+branding:
+  icon: 'shield'
+  color: 'blue'
+authors: 'Th3C0d3Mast3r | Piyush123abc | Ananya-engg'
 inputs:
   report_mode:
     description: '1: Always, 2: Not on merges, 3: Never'
