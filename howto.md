@@ -34,6 +34,9 @@ jobs:
         uses: Th3C0d3Mast3r/gitcheck@main # Use a specific tag like @v1.0.0 for stability
         with:
           report_mode: '1' # Options: 1 (Always), 2 (Skip Merges), 3 (Never)
+
+> [!TIP]
+> **Performance Boost**: By publishing GitCheck to Docker Hub, you can make this scan run 3x faster by pulling a pre-built image instead of building it on every run. See the Docker Hub section below.
 ```
 
 > [!TIP]
@@ -91,6 +94,43 @@ To make it easier for users, always maintain a "major version" tag:
 
 ---
 
+## 🐳 Publishing to Docker Hub
+
+Pushing GitCheck to Docker Hub makes it globally available and speeds up your GitHub Action, as users can pull a pre-built image instead of building it from scratch every time.
+
+### 1. Login and Build
+First, build the image and tag it with your Docker Hub username and a version.
+
+```bash
+# Log in to your Docker Hub account
+docker login
+
+# Build and Tag (Replace 'your-username' with your actual Docker Hub username)
+docker build -t your-username/gitcheck:latest -t your-username/gitcheck:v1.0.0 -f docker/Dockerfile .
+```
+
+### 2. Push to Docker Hub
+Push the tagged images to your public repository on Docker Hub.
+
+```bash
+docker push your-username/gitcheck:latest
+docker push your-username/gitcheck:v1.0.0
+```
+
+### 3. (Optional) Speed Up Your GitHub Action
+Once the image is on Docker Hub, you can change your `action.yml` to pull the image directly. This saves time on every CI/CD run.
+
+**Update `action.yml`**:
+```yaml
+runs:
+  using: 'docker'
+  image: 'docker://your-username/gitcheck:latest' # Pulls from Docker Hub instead of building
+  args:
+    - ${{ inputs.report_mode }}
+```
+
+---
+
 ## 📊 Understanding the Verdicts
 
 | Verdict | Action Taken | Meaning |
@@ -101,3 +141,4 @@ To make it easier for users, always maintain a "major version" tag:
 
 > [!IMPORTANT]
 > If GitCheck returns a **BLOCK** verdict, the GitHub Action will fail, effectively preventing a Pull Request from being merged if you have "Required Status Checks" enabled.
+
