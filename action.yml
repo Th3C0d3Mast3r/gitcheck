@@ -12,6 +12,6 @@ inputs:
 
 runs:
   using: 'docker'
-  image: 'docker/Dockerfile' # Ensure this path is correct relative to root
+  image: 'docker://dcodemaster/gitcheck:latest' # Ensure this path is correct relative to root
   args:
     - ${{ inputs.report_mode }} # This passes the choice into the container
