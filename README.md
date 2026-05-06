@@ -41,3 +41,7 @@ So, as you can see, the directories in this repo are named- PRETTY OBVIOUSLY, li
 - [ ] JSON reporting and overall push score remains (Integrations Layer)
 - [ ] Context-aware taint analysis and dynamic testing (Future Scope)
 - [ ] SAST and DAST based integration in the Jenkinsfile for local vul checking
+
+
+### CHANGELOG
+The following are the versions of the gitcheck. The github-wokflows marketplace will have the latest of them updated time to time. If not, kindly report the same in the issues.

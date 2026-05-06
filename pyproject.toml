@@ -6,7 +6,11 @@ build-backend = "setuptools.build_meta"
 name="gitcheck"
 version="0.1.0"
 dependencies = [
-    "gitpython","type-sitter", "pyyaml", "click", "rich",
+    "gitpython",
+    "tree-sitter",
+    "pyyaml",
+    "click",
+    "rich",
 ]
 
 [project.scripts]
@@ -14,4 +18,4 @@ gitcheck="cli.main:run_pipeline"
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
-addopts = "-v --html=report.html --self-contained-html --json-report --json-report-file=report.json"
+addopts = "-v --html=report.html --self-contained-html --json-report --json-report-file=report.json"
