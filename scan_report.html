@@ -1,234 +1,294 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>GitCheck &mdash; Security Scan Report</title>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Inter', -apple-system, sans-serif; background: #f4f6f9; color: #1a202c; font-size: 14px; line-height: 1.5; }
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+    <title>GitCheck Security Audit Report</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap');
+        
+        :root {
+            --bg-main: #f8fafc;
+            --bg-card: #ffffff;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --border-color: #e2e8f0;
+            --accent-primary: #1e293b;
+        }
 
-    .navbar {
-      background: #1a202c; padding: 0 32px; height: 52px;
-      display: flex; align-items: center; justify-content: space-between;
-      position: sticky; top: 0; z-index: 100;
-    }
-    .navbar .brand { color: #fff; font-size: 15px; font-weight: 700; letter-spacing: -.2px; }
-    .navbar .brand span { color: #63b3ed; }
-    .navbar .meta { color: #a0aec0; font-size: 12px; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+            font-family: 'Inter', -apple-system, sans-serif; 
+            background: var(--bg-main); 
+            color: var(--text-primary); 
+            font-size: 14px; 
+            line-height: 1.6; 
+        }
 
-    .page { max-width: 1140px; margin: 32px auto; padding: 0 24px 48px; }
+        .header {
+            background: var(--accent-primary);
+            color: white;
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 4px solid #334155;
+        }
 
-    .page-title { margin-bottom: 20px; }
-    .page-title h1 { font-size: 20px; font-weight: 700; }
-    .page-title p  { font-size: 12px; color: #718096; margin-top: 5px; }
-    .page-title p strong { color: #4a5568; }
+        .header-title { font-size: 1.25rem; font-weight: 700; letter-spacing: -0.025em; }
+        .header-meta { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: #94a3b8; }
 
-    .verdict-banner {
-      background: #fff5f5; border: 1px solid #feb2b2;
-      border-left: 5px solid #c0392b; border-radius: 6px;
-      padding: 18px 24px; display: flex; align-items: center;
-      justify-content: space-between; margin-bottom: 24px;
-    }
-    .verdict-banner h2 { font-size: 17px; font-weight: 700; color: #c0392b; }
-    .verdict-banner p  { font-size: 13px; color: #4a5568; margin-top: 3px; }
-    .verdict-tag {
-      padding: 6px 20px; border-radius: 4px; font-size: 12px; font-weight: 700;
-      letter-spacing: .8px; background: #c0392b; color: #fff; white-space: nowrap;
-    }
+        .container { max-width: 1200px; margin: 2rem auto; padding: 0 1.5rem; }
 
-    .stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-bottom: 24px; }
-    .stat {
-      background: #fff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 16px 18px;
-      border-top: 3px solid #e2e8f0;
-    }
-    .stat.critical { border-top-color: #c0392b; }
-    .stat.high     { border-top-color: #e53e3e; }
-    .stat.medium   { border-top-color: #d97706; }
-    .stat.low      { border-top-color: #2b6cb0; }
-    .stat .val { font-size: 28px; font-weight: 700; color: #1a202c; }
-    .stat.critical .val { color: #c0392b; }
-    .stat.high .val     { color: #e53e3e; }
-    .stat.medium .val   { color: #d97706; }
-    .stat.low .val      { color: #2b6cb0; }
-    .stat .lbl { font-size: 11px; color: #718096; margin-top: 2px; text-transform: uppercase; letter-spacing: .5px; font-weight: 500; }
+        .summary-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
 
-    .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 6px; margin-bottom: 24px; overflow: hidden; }
-    .card-header {
-      padding: 13px 20px; border-bottom: 1px solid #e2e8f0;
-      display: flex; align-items: center; justify-content: space-between; background: #fff;
-    }
-    .card-header h3 { font-size: 13px; font-weight: 600; color: #1a202c; text-transform: uppercase; letter-spacing: .4px; }
-    .badge-count {
-      font-size: 11px; color: #718096; background: #edf2f7;
-      padding: 2px 10px; border-radius: 12px; font-weight: 500;
-    }
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
 
-    table { width: 100%; border-collapse: collapse; }
-    thead tr { background: #f7fafc; }
-    th {
-      padding: 9px 16px; text-align: left; font-size: 11px; font-weight: 600;
-      color: #718096; text-transform: uppercase; letter-spacing: .5px;
-      border-bottom: 1px solid #e2e8f0;
-    }
+        .verdict-box {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            border-left: 6px solid #64748b;
+        }
 
-    .scanner-status-ok { color: #276749; font-size: 12px; font-weight: 600; }
+        .verdict-pass { border-left-color: #16a34a; color: #16a34a; }
+        .verdict-block { border-left-color: #dc2626; color: #dc2626; }
 
-    footer {
-      text-align: center; color: #a0aec0; font-size: 12px; padding-top: 8px;
-      border-top: 1px solid #e2e8f0; margin-top: 8px;
-    }
-  </style>
+        .verdict-title { font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--text-secondary); }
+        .verdict-value { font-size: 2.5rem; font-weight: 800; margin: 0.5rem 0; }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+        }
+
+        .stat-item { padding: 1rem; border-right: 1px solid var(--border-color); }
+        .stat-item:last-child { border-right: none; }
+        .stat-label { font-size: 0.7rem; text-transform: uppercase; color: var(--text-secondary); font-weight: 600; }
+        .stat-value { font-size: 1.5rem; font-weight: 700; }
+
+        .filter-section {
+            margin-bottom: 1.5rem;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            background: #f1f5f9;
+            padding: 1rem;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+        }
+
+        .filter-group { display: flex; align-items: center; gap: 0.5rem; }
+        select, input {
+            padding: 0.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 0.875rem;
+            outline: none;
+        }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        th {
+            background: #f8fafc;
+            text-align: left;
+            padding: 0.75rem 1rem;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            font-weight: 600;
+            color: var(--text-secondary);
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: top;
+        }
+
+        .severity-badge {
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 0.25rem 0.5rem;
+            border-radius: 2px;
+            color: white;
+            display: inline-block;
+        }
+
+        .finding-desc { font-weight: 500; margin-bottom: 0.25rem; }
+        .finding-meta { font-size: 0.75rem; color: var(--text-secondary); font-family: 'JetBrains Mono', monospace; }
+        
+        .compliance-info {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px dashed var(--border-color);
+            font-size: 0.75rem;
+        }
+
+        .compliance-label { font-weight: 700; color: var(--accent-primary); }
+
+        .hidden { display: none; }
+
+        footer {
+            margin-top: 4rem;
+            padding: 2rem;
+            text-align: center;
+            border-top: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+        }
+    </style>
 </head>
 <body>
 
-<nav class="navbar">
-  <div class="brand">Git<span>Check</span> &mdash; Security Scan Report</div>
-  <div class="meta">Generated: 2026-05-05 16:54:59</div>
-</nav>
+<header class="header">
+    <div class="header-title">GITCHECK SECURITY AUDIT</div>
+    <div class="header-meta">REPORT_ID: 2026-05-06_14:49:30 | GENERATED: 2026-05-06 14:49:30</div>
+</header>
 
-<div class="page">
+<div class="container">
+    <div class="summary-grid">
+        <div class="card verdict-box verdict-block">
+            <div class="verdict-title">Security Verdict</div>
+            <div class="verdict-value">BLOCK</div>
+            <div class="header-meta" style="color: inherit">Risk Score: 2035</div>
+        </div>
+        <div class="card">
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-label">Critical</div>
+                    <div class="stat-value" style="color: #b91c1c">13</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">High</div>
+                    <div class="stat-value" style="color: #e11d48">11</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Medium</div>
+                    <div class="stat-value" style="color: #d97706">9</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Low</div>
+                    <div class="stat-value" style="color: #2563eb">1</div>
+                </div>
+            </div>
+            <div style="margin-top: 1.5rem; font-size: 0.75rem; color: var(--text-secondary)">
+                Scan Target: <strong>Folder: malicious/</strong>
+            </div>
+        </div>
+    </div>
 
-  <div class="page-title">
-    <h1>Security Audit Report</h1>
-    <p>
-      Repository: <strong>gitcheck</strong> &nbsp;|&nbsp;
-      Branch: <strong>endingIntegration</strong> &nbsp;|&nbsp;
-      Commit range: <strong>HEAD~1 &rarr; HEAD</strong> &nbsp;|&nbsp;
-      Scanned: <strong>2026-05-05 16:54:59</strong>
-    </p>
-  </div>
+    <div class="filter-section">
+        <div class="filter-group">
+            <label for="sevFilter">Severity:</label>
+            <select id="sevFilter" onchange="filterFindings()">
+                <option value="ALL">All Levels</option>
+                <option value="CRITICAL">Critical</option>
+                <option value="HIGH">High</option>
+                <option value="MEDIUM">Medium</option>
+                <option value="LOW">Low</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label for="typeFilter">Scanner:</label>
+            <select id="typeFilter" onchange="filterFindings()">
+                <option value="ALL">All Scanners</option>
+                <option value="Secret Scanner">Secret Scanner</option>
+                <option value="AST / Code Analysis">Code Analysis</option>
+                <option value="Malicious Code Scanner">Malicious Code</option>
+                <option value="IaC Scanner">IaC Scanner</option>
+                <option value="SCA Scanner">SCA Scanner</option>
+                <option value="Container Scanner">Container Scanner</option>
+            </select>
+        </div>
+        <div class="filter-group" style="margin-left: auto;">
+            <input type="text" id="searchFilter" placeholder="Search findings..." onkeyup="filterFindings()">
+        </div>
+    </div>
 
-  <div class="verdict-banner">
-    <div>
-      <h2>Pipeline BLOCKED</h2>
-      <p>Overall risk score: <strong>120</strong> &mdash; 3 finding(s) identified across all scanners.</p>
+    <div class="card" style="padding: 0;">
+        <table id="findingsTable">
+            <thead>
+                <tr>
+                    <th style="width: 100px;">Severity</th>
+                    <th>Vulnerability Details</th>
+                    <th style="width: 250px;">Compliance Reference</th>
+                </tr>
+            </thead>
+            <tbody id="findingsBody">
+                <!-- Data injected by JS -->
+            </tbody>
+        </table>
     </div>
-    <div class="verdict-tag">BLOCKED</div>
-  </div>
-
-  <div class="stats">
-    <div class="stat">
-      <div class="val">3</div>
-      <div class="lbl">Total Findings</div>
-    </div>
-    <div class="stat critical">
-      <div class="val">0</div>
-      <div class="lbl">Critical</div>
-    </div>
-    <div class="stat high">
-      <div class="val">2</div>
-      <div class="lbl">High</div>
-    </div>
-    <div class="stat medium">
-      <div class="val">1</div>
-      <div class="lbl">Medium</div>
-    </div>
-    <div class="stat low">
-      <div class="val">0</div>
-      <div class="lbl">Low</div>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-header">
-      <h3>Scan Findings</h3>
-      <span class="badge-count">3 result(s)</span>
-    </div>
-    <table>
-      <thead>
-        <tr>
-          <th style="width:44px;">#</th>
-          <th style="width:110px;">Severity</th>
-          <th>Description</th>
-          <th style="width:210px;">Scanner</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:12px 16px;font-size:13px;font-weight:500;color:#1a202c;">1</td><td style="padding:12px 16px;"><span style="display:inline-block;padding:2px 9px;border-radius:3px;font-size:11px;font-weight:700;letter-spacing:.5px;background:#e53e3e;color:#fff;">HIGH</span></td><td style="padding:12px 16px;font-size:13px;color:#2d3748;">AWS Access Key ID found at malicious.py (added line 4)</td><td style="padding:12px 16px;font-size:12px;color:#718096;">Secret Scanner</td></tr>
-<tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:12px 16px;font-size:13px;font-weight:500;color:#1a202c;">2</td><td style="padding:12px 16px;"><span style="display:inline-block;padding:2px 9px;border-radius:3px;font-size:11px;font-weight:700;letter-spacing:.5px;background:#d97706;color:#fff;">MEDIUM</span></td><td style="padding:12px 16px;font-size:13px;color:#2d3748;">Hardcoded Internal IP Address (SSRF Risk) found at malicious.py (added line 8)</td><td style="padding:12px 16px;font-size:12px;color:#718096;">Secret Scanner</td></tr>
-<tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:12px 16px;font-size:13px;font-weight:500;color:#1a202c;">3</td><td style="padding:12px 16px;"><span style="display:inline-block;padding:2px 9px;border-radius:3px;font-size:11px;font-weight:700;letter-spacing:.5px;background:#e53e3e;color:#fff;">HIGH</span></td><td style="padding:12px 16px;font-size:13px;color:#2d3748;">Dangerous function call => os.system found at malicious.py (line 9)</td><td style="padding:12px 16px;font-size:12px;color:#718096;">AST / Code Analysis</td></tr>
-
-        
-      </tbody>
-    </table>
-  </div>
-
-  <div class="card">
-    <div class="card-header">
-      <h3>Scan History</h3>
-      <span class="badge-count">latest run</span>
-    </div>
-    <table>
-      <thead>
-        <tr>
-          <th>Timestamp</th>
-          <th>Commit Range</th>
-          <th>Verdict</th>
-          <th>Findings</th>
-          <th>Risk Score</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr style="background:#f7fafc;border-bottom:1px solid #e2e8f0;"><td style="padding:10px 16px;font-size:13px;color:#2d3748;">2026-05-05 16:54:59</td><td style="padding:10px 16px;font-size:13px;color:#2d3748;">HEAD~1 &rarr; HEAD</td><td style="padding:10px 16px;font-size:13px;font-weight:600;color:#c0392b;">BLOCKED</td><td style="padding:10px 16px;font-size:13px;color:#2d3748;">3</td><td style="padding:10px 16px;font-size:13px;color:#2d3748;">120</td></tr>
-      </tbody>
-    </table>
-  </div>
-
-  <div class="card">
-    <div class="card-header">
-      <h3>Scanner Coverage</h3>
-      <span class="badge-count">6 scanners</span>
-    </div>
-    <table>
-      <thead>
-        <tr>
-          <th style="width:220px;">Scanner</th>
-          <th style="width:80px;">Status</th>
-          <th>Description</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr style="border-bottom:1px solid #e2e8f0;">
-          <td style="padding:11px 16px;font-size:13px;font-weight:500;">Secret Scanner</td>
-          <td style="padding:11px 16px;"><span class="scanner-status-ok">PASSED</span></td>
-          <td style="padding:11px 16px;font-size:13px;color:#718096;">Detects hardcoded API keys, tokens, PII, and credentials via regex compliance rules.</td>
-        </tr>
-        <tr style="border-bottom:1px solid #e2e8f0;">
-          <td style="padding:11px 16px;font-size:13px;font-weight:500;">AST / Code Analysis</td>
-          <td style="padding:11px 16px;"><span class="scanner-status-ok">PASSED</span></td>
-          <td style="padding:11px 16px;font-size:13px;color:#718096;">Static analysis using tree-sitter to detect dangerous function calls (eval, exec, os.system, subprocess).</td>
-        </tr>
-        <tr style="border-bottom:1px solid #e2e8f0;">
-          <td style="padding:11px 16px;font-size:13px;font-weight:500;">SCA Scanner</td>
-          <td style="padding:11px 16px;"><span class="scanner-status-ok">PASSED</span></td>
-          <td style="padding:11px 16px;font-size:13px;color:#718096;">Software Composition Analysis &mdash; checks dependencies for banned packages, licenses and authors.</td>
-        </tr>
-        <tr style="border-bottom:1px solid #e2e8f0;">
-          <td style="padding:11px 16px;font-size:13px;font-weight:500;">Container Scanner</td>
-          <td style="padding:11px 16px;"><span class="scanner-status-ok">PASSED</span></td>
-          <td style="padding:11px 16px;font-size:13px;color:#718096;">Analyses Dockerfiles for EOL base images, the latest tag, and root user execution risk.</td>
-        </tr>
-        <tr style="border-bottom:1px solid #e2e8f0;">
-          <td style="padding:11px 16px;font-size:13px;font-weight:500;">IaC Scanner</td>
-          <td style="padding:11px 16px;"><span class="scanner-status-ok">PASSED</span></td>
-          <td style="padding:11px 16px;font-size:13px;color:#718096;">Identifies Terraform and Kubernetes misconfigurations such as public S3 buckets and privileged pods.</td>
-        </tr>
-        <tr>
-          <td style="padding:11px 16px;font-size:13px;font-weight:500;">Malicious Code Scanner</td>
-          <td style="padding:11px 16px;"><span class="scanner-status-ok">PASSED</span></td>
-          <td style="padding:11px 16px;font-size:13px;color:#718096;">Detects reverse shells, data exfiltration, destructive commands, obfuscation, and SSH backdoors.</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-
 </div>
 
 <footer>
-  <strong>GitCheck</strong> &mdash; Automated Security Scanning for CI/CD Pipelines &mdash; 05 May 2026
+    GITCHECK AUDIT ENGINE | 06 May 2026 | CONFIDENTIAL SECURITY REPORT
 </footer>
 
+<script>
+    const findings = [{"id": 1, "severity": "MEDIUM", "scanner": "Secret Scanner", "description": "Hardcoded Internal IP Address (SSRF Risk) found at malicious/evil.sh (added line 8)", "standard": "SOC2 CC6.1 / PCI-DSS 3.2.1", "compliance_desc": "Protection of sensitive authentication credentials and cryptographic keys."}, {"id": 2, "severity": "MEDIUM", "scanner": "Secret Scanner", "description": "Hardcoded Internal IP Address (SSRF Risk) found at malicious/evil.sh (added line 11)", "standard": "SOC2 CC6.1 / PCI-DSS 3.2.1", "compliance_desc": "Protection of sensitive authentication credentials and cryptographic keys."}, {"id": 3, "severity": "HIGH", "scanner": "Secret Scanner", "description": "AWS Access Key ID found at malicious/malicious.py (added line 12)", "standard": "SOC2 CC6.1 / PCI-DSS 3.2.1", "compliance_desc": "Protection of sensitive authentication credentials and cryptographic keys."}, {"id": 4, "severity": "CRITICAL", "scanner": "Secret Scanner", "description": "GitHub Personal Access Token found at malicious/malicious.py (added line 15)", "standard": "SOC2 CC6.1 / PCI-DSS 3.2.1", "compliance_desc": "Protection of sensitive authentication credentials and cryptographic keys."}, {"id": 5, "severity": "MEDIUM", "scanner": "Secret Scanner", "description": "Generic Password or API Secret Assignment found at malicious/malicious.py (added line 15)", "standard": "SOC2 CC6.1 / PCI-DSS 3.2.1", "compliance_desc": "Protection of sensitive authentication credentials and cryptographic keys."}, {"id": 6, "severity": "CRITICAL", "scanner": "Secret Scanner", "description": "RSA Private Key found at malicious/malicious.py (added line 18)", "standard": "SOC2 CC6.1 / PCI-DSS 3.2.1", "compliance_desc": "Protection of sensitive authentication credentials and cryptographic keys."}, {"id": 7, "severity": "MEDIUM", "scanner": "Secret Scanner", "description": "Generic Password or API Secret Assignment found at malicious/malicious.py (added line 23)", "standard": "SOC2 CC6.1 / PCI-DSS 3.2.1", "compliance_desc": "Protection of sensitive authentication credentials and cryptographic keys."}, {"id": 8, "severity": "MEDIUM", "scanner": "Secret Scanner", "description": "Hardcoded Internal IP Address (SSRF Risk) found at malicious/malicious.py (added line 26)", "standard": "SOC2 CC6.1 / PCI-DSS 3.2.1", "compliance_desc": "Protection of sensitive authentication credentials and cryptographic keys."}, {"id": 9, "severity": "HIGH", "scanner": "Secret Scanner", "description": "Potential PII (Social Security Number) in mock data found at malicious/malicious.py (added line 29)", "standard": "SOC2 CC6.1 / PCI-DSS 3.2.1", "compliance_desc": "Protection of sensitive authentication credentials and cryptographic keys."}, {"id": 10, "severity": "MEDIUM", "scanner": "Secret Scanner", "description": "Generic Password or API Secret Assignment found at malicious/malicious.py (added line 32)", "standard": "SOC2 CC6.1 / PCI-DSS 3.2.1", "compliance_desc": "Protection of sensitive authentication credentials and cryptographic keys."}, {"id": 11, "severity": "LOW", "scanner": "Secret Scanner", "description": "Hardcoded UUID (Potential Business Logic Bypass) found at malicious/malicious.py (added line 32)", "standard": "SOC2 CC6.1 / PCI-DSS 3.2.1", "compliance_desc": "Protection of sensitive authentication credentials and cryptographic keys."}, {"id": 12, "severity": "HIGH", "scanner": "Secret Scanner", "description": "Slack Bot Token found at malicious/malicious.py (added line 35)", "standard": "SOC2 CC6.1 / PCI-DSS 3.2.1", "compliance_desc": "Protection of sensitive authentication credentials and cryptographic keys."}, {"id": 13, "severity": "MEDIUM", "scanner": "Secret Scanner", "description": "Generic Password or API Secret Assignment found at malicious/malicious.py (added line 35)", "standard": "SOC2 CC6.1 / PCI-DSS 3.2.1", "compliance_desc": "Protection of sensitive authentication credentials and cryptographic keys."}, {"id": 14, "severity": "MEDIUM", "scanner": "Secret Scanner", "description": "Hardcoded Internal IP Address (SSRF Risk) found at malicious/malicious.py (added line 40)", "standard": "SOC2 CC6.1 / PCI-DSS 3.2.1", "compliance_desc": "Protection of sensitive authentication credentials and cryptographic keys."}, {"id": 15, "severity": "CRITICAL", "scanner": "Malicious Code Scanner", "description": "SUPPLY CHAIN RISK: Banned package 'requests-v2' found in malicious/requirements.txt - Malicious typo-squatting package imitating 'requests'.", "standard": "NIST SP 800-53 (SI-3)", "compliance_desc": "Detection and prevention of malicious code and unauthorized system access."}, {"id": 16, "severity": "CRITICAL", "scanner": "Malicious Code Scanner", "description": "SUPPLY CHAIN RISK: Banned package 'log4j' found in malicious/requirements.txt - Known high-risk vulnerabilities (e.g., Log4Shell). Must use log4j2.", "standard": "NIST SP 800-53 (SI-3)", "compliance_desc": "Detection and prevention of malicious code and unauthorized system access."}, {"id": 17, "severity": "CRITICAL", "scanner": "SCA Scanner", "description": "CONTAINER RISK: Banned base image 'ubuntu:18.04' at line 7 - Ubuntu 18.04 is End-of-Life (EOL) and no longer receives security updates.", "standard": "OWASP Top 10 (A06:2021)", "compliance_desc": "Management of vulnerable and outdated components in the supply chain."}, {"id": 18, "severity": "HIGH", "scanner": "SCA Scanner", "description": "CONTAINER RISK: Banned tag 'latest' at line 10 - The ':latest' tag is mutable. An unexpected update could break your build or introduce vulnerabilities. Pin to a specific version.", "standard": "OWASP Top 10 (A06:2021)", "compliance_desc": "Management of vulnerable and outdated components in the supply chain."}, {"id": 19, "severity": "CRITICAL", "scanner": "AST / Code Analysis", "description": "CONTAINER RISK: Dangerous command 'curl | sh' at line 13 - Piping curl directly to a shell allows unverified remote code execution during build.", "standard": "OWASP Top 10 (A03:2021)", "compliance_desc": "Prevention of Injection and insecure execution of untrusted code."}, {"id": 20, "severity": "HIGH", "scanner": "Container Scanner", "description": "CONTAINER RISK: Explicit 'USER root' at line 16. Containers should run as non-root.", "standard": "NIST SP 800-190", "compliance_desc": "Application Container Security Guide compliance for base images and runtime."}, {"id": 21, "severity": "MEDIUM", "scanner": "Container Scanner", "description": "CONTAINER RISK: No non-root USER directive found in Dockerfile. Container defaults to root.", "standard": "NIST SP 800-190", "compliance_desc": "Application Container Security Guide compliance for base images and runtime."}, {"id": 22, "severity": "CRITICAL", "scanner": "Malicious Code Scanner", "description": "IaC RISK (public_s3_bucket): S3 buckets should never have public read or write ACLs. This is a massive data leak risk. at malicious/insecure_infra.tf (line 13)", "standard": "NIST SP 800-53 (SI-3)", "compliance_desc": "Detection and prevention of malicious code and unauthorized system access."}, {"id": 23, "severity": "HIGH", "scanner": "AST / Code Analysis", "description": "IaC RISK (open_ingress_sg): Security group allows ingress from any IP address (0.0.0.0/0). Enforce Least Privilege. at malicious/insecure_infra.tf (line 24)", "standard": "OWASP Top 10 (A03:2021)", "compliance_desc": "Prevention of Injection and insecure execution of untrusted code."}, {"id": 24, "severity": "CRITICAL", "scanner": "Malicious Code Scanner", "description": "IaC RISK (privileged_pod): Running a privileged pod gives it root capabilities on the host node. This allows container escapes. at malicious/k8s_pod.yaml (line 17)", "standard": "NIST SP 800-53 (SI-3)", "compliance_desc": "Detection and prevention of malicious code and unauthorized system access."}, {"id": 25, "severity": "HIGH", "scanner": "Malicious Code Scanner", "description": "IaC RISK (root_user): Running a pod as user 0 (root) allows container escapes. Use a non-root user ID. at malicious/k8s_pod.yaml (line 20)", "standard": "NIST SP 800-53 (SI-3)", "compliance_desc": "Detection and prevention of malicious code and unauthorized system access."}, {"id": 26, "severity": "CRITICAL", "scanner": "Malicious Code Scanner", "description": "Reverse shell connection detected via bash. found at malicious/evil.sh (added line 8)", "standard": "NIST SP 800-53 (SI-3)", "compliance_desc": "Detection and prevention of malicious code and unauthorized system access."}, {"id": 27, "severity": "CRITICAL", "scanner": "Malicious Code Scanner", "description": "Reverse shell connection detected via netcat. found at malicious/evil.sh (added line 11)", "standard": "NIST SP 800-53 (SI-3)", "compliance_desc": "Detection and prevention of malicious code and unauthorized system access."}, {"id": 28, "severity": "HIGH", "scanner": "Malicious Code Scanner", "description": "Piping internet download directly into shell. found at malicious/evil.sh (added line 14)", "standard": "NIST SP 800-53 (SI-3)", "compliance_desc": "Detection and prevention of malicious code and unauthorized system access."}, {"id": 29, "severity": "CRITICAL", "scanner": "Malicious Code Scanner", "description": "Exfiltrating sensitive local files via curl/wget. found at malicious/evil.sh (added line 17)", "standard": "NIST SP 800-53 (SI-3)", "compliance_desc": "Detection and prevention of malicious code and unauthorized system access."}, {"id": 30, "severity": "CRITICAL", "scanner": "Malicious Code Scanner", "description": "Destructive system deletion command. found at malicious/evil.sh (added line 20)", "standard": "NIST SP 800-53 (SI-3)", "compliance_desc": "Detection and prevention of malicious code and unauthorized system access."}, {"id": 31, "severity": "HIGH", "scanner": "AST / Code Analysis", "description": "Execution of base64 decoded payload. found at malicious/evil.sh (added line 23)", "standard": "OWASP Top 10 (A03:2021)", "compliance_desc": "Prevention of Injection and insecure execution of untrusted code."}, {"id": 32, "severity": "HIGH", "scanner": "Malicious Code Scanner", "description": "Piping internet download directly into shell. found at malicious/evil.sh (added line 26)", "standard": "NIST SP 800-53 (SI-3)", "compliance_desc": "Detection and prevention of malicious code and unauthorized system access."}, {"id": 33, "severity": "HIGH", "scanner": "Malicious Code Scanner", "description": "Adding cron jobs for persistence. found at malicious/evil.sh (added line 26)", "standard": "NIST SP 800-53 (SI-3)", "compliance_desc": "Detection and prevention of malicious code and unauthorized system access."}, {"id": 34, "severity": "CRITICAL", "scanner": "Malicious Code Scanner", "description": "Adding keys to authorized_keys for backdoor access. found at malicious/evil.sh (added line 29)", "standard": "NIST SP 800-53 (SI-3)", "compliance_desc": "Detection and prevention of malicious code and unauthorized system access."}];
+    const sevColors = {"CRITICAL": "#b91c1c", "HIGH": "#e11d48", "MEDIUM": "#d97706", "LOW": "#2563eb", "INFO": "#4b5563"};
+
+    function renderTable(data) {
+        const body = document.getElementById('findingsBody');
+        body.innerHTML = '';
+
+        if (data.length === 0) {
+            body.innerHTML = '<tr><td colspan="3" style="text-align: center; padding: 3rem; color: var(--text-secondary);">No findings match the selected criteria.</td></tr>';
+            return;
+        }
+
+        data.forEach(item => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>
+                    <span class="severity-badge" style="background: ${sevColors[item.severity]}">${item.severity}</span>
+                </td>
+                <td>
+                    <div class="finding-desc">${item.description}</div>
+                    <div class="finding-meta">Scanner: ${item.scanner}</div>
+                </td>
+                <td>
+                    <div class="compliance-label">${item.standard}</div>
+                    <div class="compliance-info">${item.compliance_desc}</div>
+                </td>
+            `;
+            body.appendChild(row);
+        });
+    }
+
+    function filterFindings() {
+        const sev = document.getElementById('sevFilter').value;
+        const type = document.getElementById('typeFilter').value;
+        const search = document.getElementById('searchFilter').value.toLowerCase();
+
+        const filtered = findings.filter(item => {
+            const matchSev = sev === 'ALL' || item.severity === sev;
+            const matchType = type === 'ALL' || item.scanner === type;
+            const matchSearch = item.description.toLowerCase().includes(search) || 
+                               item.scanner.toLowerCase().includes(search) ||
+                               item.standard.toLowerCase().includes(search);
+            return matchSev && matchType && matchSearch;
+        });
+
+        renderTable(filtered);
+    }
+
+    // Initial render
+    renderTable(findings);
+</script>
 </body>
 </html>

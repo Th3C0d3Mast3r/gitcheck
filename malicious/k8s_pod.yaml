@@ -1,0 +1,20 @@
+# ============================================================
+# TEST FILE: k8s_pod.yaml
+# Scanners targeted: IaC Scanner (Kubernetes rules)
+# ============================================================
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: dangerous-pod
+spec:
+  containers:
+    - name: app
+      image: ubuntu:18.04
+
+      securityContext:
+        # 1. Privileged pod — allows container escape (CRITICAL)
+        privileged: true
+
+        # 2. Running as root user (HIGH)
+        runAsUser: 0

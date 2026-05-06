@@ -1,44 +1,65 @@
 """
-Professional HTML report generator for GitCheck CLI.
-Called from cli/main.py after a scan completes.
+Enterprise-grade HTML report generator for GitCheck.
+Features interactive filtering, detailed compliance mapping, and professional aesthetics.
 """
 import re
+import json
 from datetime import datetime
 
-
+# Professional color palette (slate/zinc)
 SEV_COLORS = {
-    "CRITICAL": "#c0392b",
-    "HIGH":     "#e53e3e",
-    "MEDIUM":   "#d97706",
-    "LOW":      "#2b6cb0",
-    "INFO":     "#4a5568",
+    "CRITICAL": "#b91c1c", # Red 700
+    "HIGH":     "#e11d48", # Rose 600
+    "MEDIUM":   "#d97706", # Amber 600
+    "LOW":      "#2563eb", # Blue 600
+    "INFO":     "#4b5563", # Gray 600
 }
 
-SEV_BG = {
-    "CRITICAL": "#fff5f5",
-    "HIGH":     "#fff5f5",
-    "MEDIUM":   "#fffbeb",
-    "LOW":      "#ebf8ff",
-    "INFO":     "#f7fafc",
+# Mapping of scanner types to compliance frameworks/standards
+COMPLIANCE_MAP = {
+    "Secret Scanner": {
+        "standard": "SOC2 CC6.1 / PCI-DSS 3.2.1",
+        "description": "Protection of sensitive authentication credentials and cryptographic keys."
+    },
+    "AST / Code Analysis": {
+        "standard": "OWASP Top 10 (A03:2021)",
+        "description": "Prevention of Injection and insecure execution of untrusted code."
+    },
+    "Malicious Code Scanner": {
+        "standard": "NIST SP 800-53 (SI-3)",
+        "description": "Detection and prevention of malicious code and unauthorized system access."
+    },
+    "IaC Scanner": {
+        "standard": "CIS Benchmark / ISO 27001",
+        "description": "Enforcement of secure infrastructure configurations and least privilege access."
+    },
+    "SCA Scanner": {
+        "standard": "OWASP Top 10 (A06:2021)",
+        "description": "Management of vulnerable and outdated components in the supply chain."
+    },
+    "Container Scanner": {
+        "standard": "NIST SP 800-190",
+        "description": "Application Container Security Guide compliance for base images and runtime."
+    },
+    "General Scanner": {
+        "standard": "Internal Policy",
+        "description": "General security best practices and organizational policy compliance."
+    }
 }
-
 
 def _extract_sev(finding):
     m = re.match(r"\[([A-Z]+)\]", finding)
     return m.group(1) if m else "INFO"
 
-
 def _extract_scanner(finding):
     f = finding.lower()
-    if any(k in f for k in ["dangerous_call", "os.system", "eval", "exec", "subprocess"]):
+    if any(k in f for k in ["dangerous_call", "os.system", "eval", "exec", "subprocess", "ast"]):
         return "AST / Code Analysis"
-    if any(k in f for k in ["aws", "github", "slack", "rsa", "password", "secret", "token",
-                             "pii", "api", "ssn", "uuid", "ip address", "domain"]):
+    if any(k in f for k in ["aws", "github", "slack", "rsa", "password", "secret", "token", "pii", "api", "ssn", "uuid", "ip address", "domain"]):
         return "Secret Scanner"
-    if any(k in f for k in ["reverse_shell", "netcat", "curl", "base64", "crontab",
-                             "authorized_keys", "rm -rf"]):
+    if any(k in f for k in ["reverse_shell", "netcat", "curl", "base64", "crontab", "authorized_keys", "rm -rf", "malicious"]):
         return "Malicious Code Scanner"
-    if any(k in f for k in [".tf", "terraform", "kubernetes", "s3", "security_group", "privileged"]):
+    if any(k in f for k in [".tf", "terraform", "kubernetes", "s3", "security_group", "privileged", "iac"]):
         return "IaC Scanner"
     if any(k in f for k in ["requirements", "package", "dependency", "sca", "banned"]):
         return "SCA Scanner"
@@ -46,9 +67,8 @@ def _extract_scanner(finding):
         return "Container Scanner"
     return "General Scanner"
 
-
-def generate_html_report(all_findings, score, verdict, output_path="scan_report.html"):
-    """Generates a professional, enterprise-style security audit report."""
+def generate_html_report(all_findings, score, verdict, scan_range="HEAD~1 → HEAD", output_path="scan_report.html"):
+    """Generates a professional, non-AI styled security audit report with filtering."""
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     date_only  = datetime.now().strftime("%d %B %Y")
 
@@ -57,277 +77,322 @@ def generate_html_report(all_findings, score, verdict, output_path="scan_report.
     med_count  = sum(1 for f in all_findings if _extract_sev(f) == "MEDIUM")
     low_count  = sum(1 for f in all_findings if _extract_sev(f) == "LOW")
 
-    verdict_color  = "#c0392b" if verdict == "BLOCK" else "#276749"
-    verdict_bg     = "#fff5f5" if verdict == "BLOCK" else "#f0fff4"
-    verdict_border = "#feb2b2" if verdict == "BLOCK" else "#9ae6b4"
-    verdict_label  = "BLOCKED"  if verdict == "BLOCK" else "PASSED"
+    verdict_label = "BLOCK" if verdict == "BLOCK" else "PASS"
+    verdict_class = "verdict-block" if verdict == "BLOCK" else "verdict-pass"
 
-    # --- findings table rows ---
-    rows = ""
+    # Prepare findings data for JS filtering
+    findings_data = []
     for i, f in enumerate(all_findings, 1):
-        sev     = _extract_sev(f)
+        sev = _extract_sev(f)
         scanner = _extract_scanner(f)
-        sc      = SEV_COLORS.get(sev, "#4a5568")
-        desc    = re.sub(r"^\[[A-Z]+\]\s*", "", f)
-        rows += (
-            f'<tr style="border-bottom:1px solid #e2e8f0;">'
-            f'<td style="padding:12px 16px;font-size:13px;font-weight:500;color:#1a202c;">{i}</td>'
-            f'<td style="padding:12px 16px;">'
-            f'<span style="display:inline-block;padding:2px 9px;border-radius:3px;font-size:11px;'
-            f'font-weight:700;letter-spacing:.5px;background:{sc};color:#fff;">{sev}</span></td>'
-            f'<td style="padding:12px 16px;font-size:13px;color:#2d3748;">{desc}</td>'
-            f'<td style="padding:12px 16px;font-size:12px;color:#718096;">{scanner}</td>'
-            f'</tr>\n'
-        )
-
-    no_findings_row = (
-        '<tr><td colspan="4" style="padding:40px;text-align:center;'
-        'color:#276749;font-size:14px;font-weight:500;">'
-        'No vulnerabilities detected in this scan.</td></tr>'
-    ) if not all_findings else ""
-
-    history_row = (
-        f'<tr style="background:#f7fafc;border-bottom:1px solid #e2e8f0;">'
-        f'<td style="padding:10px 16px;font-size:13px;color:#2d3748;">{timestamp}</td>'
-        f'<td style="padding:10px 16px;font-size:13px;color:#2d3748;">HEAD~1 &rarr; HEAD</td>'
-        f'<td style="padding:10px 16px;font-size:13px;font-weight:600;color:{verdict_color};">{verdict_label}</td>'
-        f'<td style="padding:10px 16px;font-size:13px;color:#2d3748;">{len(all_findings)}</td>'
-        f'<td style="padding:10px 16px;font-size:13px;color:#2d3748;">{score}</td>'
-        f'</tr>'
-    )
+        compliance = COMPLIANCE_MAP.get(scanner, COMPLIANCE_MAP["General Scanner"])
+        desc = re.sub(r"^\[[A-Z]+\]\s*", "", f)
+        
+        findings_data.append({
+            "id": i,
+            "severity": sev,
+            "scanner": scanner,
+            "description": desc,
+            "standard": compliance["standard"],
+            "compliance_desc": compliance["description"]
+        })
 
     html = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>GitCheck &mdash; Security Scan Report</title>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-    * {{ box-sizing: border-box; margin: 0; padding: 0; }}
-    body {{ font-family: 'Inter', -apple-system, sans-serif; background: #f4f6f9; color: #1a202c; font-size: 14px; line-height: 1.5; }}
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+    <title>GitCheck Security Audit Report</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap');
+        
+        :root {{
+            --bg-main: #f8fafc;
+            --bg-card: #ffffff;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --border-color: #e2e8f0;
+            --accent-primary: #1e293b;
+        }}
 
-    .navbar {{
-      background: #1a202c; padding: 0 32px; height: 52px;
-      display: flex; align-items: center; justify-content: space-between;
-      position: sticky; top: 0; z-index: 100;
-    }}
-    .navbar .brand {{ color: #fff; font-size: 15px; font-weight: 700; letter-spacing: -.2px; }}
-    .navbar .brand span {{ color: #63b3ed; }}
-    .navbar .meta {{ color: #a0aec0; font-size: 12px; }}
+        * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+        body {{ 
+            font-family: 'Inter', -apple-system, sans-serif; 
+            background: var(--bg-main); 
+            color: var(--text-primary); 
+            font-size: 14px; 
+            line-height: 1.6; 
+        }}
 
-    .page {{ max-width: 1140px; margin: 32px auto; padding: 0 24px 48px; }}
+        .header {{
+            background: var(--accent-primary);
+            color: white;
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 4px solid #334155;
+        }}
 
-    .page-title {{ margin-bottom: 20px; }}
-    .page-title h1 {{ font-size: 20px; font-weight: 700; }}
-    .page-title p  {{ font-size: 12px; color: #718096; margin-top: 5px; }}
-    .page-title p strong {{ color: #4a5568; }}
+        .header-title {{ font-size: 1.25rem; font-weight: 700; letter-spacing: -0.025em; }}
+        .header-meta {{ font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: #94a3b8; }}
 
-    .verdict-banner {{
-      background: {verdict_bg}; border: 1px solid {verdict_border};
-      border-left: 5px solid {verdict_color}; border-radius: 6px;
-      padding: 18px 24px; display: flex; align-items: center;
-      justify-content: space-between; margin-bottom: 24px;
-    }}
-    .verdict-banner h2 {{ font-size: 17px; font-weight: 700; color: {verdict_color}; }}
-    .verdict-banner p  {{ font-size: 13px; color: #4a5568; margin-top: 3px; }}
-    .verdict-tag {{
-      padding: 6px 20px; border-radius: 4px; font-size: 12px; font-weight: 700;
-      letter-spacing: .8px; background: {verdict_color}; color: #fff; white-space: nowrap;
-    }}
+        .container {{ max-width: 1200px; margin: 2rem auto; padding: 0 1.5rem; }}
 
-    .stats {{ display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-bottom: 24px; }}
-    .stat {{
-      background: #fff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 16px 18px;
-      border-top: 3px solid #e2e8f0;
-    }}
-    .stat.critical {{ border-top-color: #c0392b; }}
-    .stat.high     {{ border-top-color: #e53e3e; }}
-    .stat.medium   {{ border-top-color: #d97706; }}
-    .stat.low      {{ border-top-color: #2b6cb0; }}
-    .stat .val {{ font-size: 28px; font-weight: 700; color: #1a202c; }}
-    .stat.critical .val {{ color: #c0392b; }}
-    .stat.high .val     {{ color: #e53e3e; }}
-    .stat.medium .val   {{ color: #d97706; }}
-    .stat.low .val      {{ color: #2b6cb0; }}
-    .stat .lbl {{ font-size: 11px; color: #718096; margin-top: 2px; text-transform: uppercase; letter-spacing: .5px; font-weight: 500; }}
+        .summary-grid {{
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }}
 
-    .card {{ background: #fff; border: 1px solid #e2e8f0; border-radius: 6px; margin-bottom: 24px; overflow: hidden; }}
-    .card-header {{
-      padding: 13px 20px; border-bottom: 1px solid #e2e8f0;
-      display: flex; align-items: center; justify-content: space-between; background: #fff;
-    }}
-    .card-header h3 {{ font-size: 13px; font-weight: 600; color: #1a202c; text-transform: uppercase; letter-spacing: .4px; }}
-    .badge-count {{
-      font-size: 11px; color: #718096; background: #edf2f7;
-      padding: 2px 10px; border-radius: 12px; font-weight: 500;
-    }}
+        .card {{
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }}
 
-    table {{ width: 100%; border-collapse: collapse; }}
-    thead tr {{ background: #f7fafc; }}
-    th {{
-      padding: 9px 16px; text-align: left; font-size: 11px; font-weight: 600;
-      color: #718096; text-transform: uppercase; letter-spacing: .5px;
-      border-bottom: 1px solid #e2e8f0;
-    }}
+        .verdict-box {{
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            border-left: 6px solid #64748b;
+        }}
 
-    .scanner-status-ok {{ color: #276749; font-size: 12px; font-weight: 600; }}
+        .verdict-pass {{ border-left-color: #16a34a; color: #16a34a; }}
+        .verdict-block {{ border-left-color: #dc2626; color: #dc2626; }}
 
-    footer {{
-      text-align: center; color: #a0aec0; font-size: 12px; padding-top: 8px;
-      border-top: 1px solid #e2e8f0; margin-top: 8px;
-    }}
-  </style>
+        .verdict-title {{ font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--text-secondary); }}
+        .verdict-value {{ font-size: 2.5rem; font-weight: 800; margin: 0.5rem 0; }}
+
+        .stats-grid {{
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+        }}
+
+        .stat-item {{ padding: 1rem; border-right: 1px solid var(--border-color); }}
+        .stat-item:last-child {{ border-right: none; }}
+        .stat-label {{ font-size: 0.7rem; text-transform: uppercase; color: var(--text-secondary); font-weight: 600; }}
+        .stat-value {{ font-size: 1.5rem; font-weight: 700; }}
+
+        .filter-section {{
+            margin-bottom: 1.5rem;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            background: #f1f5f9;
+            padding: 1rem;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+        }}
+
+        .filter-group {{ display: flex; align-items: center; gap: 0.5rem; }}
+        select, input {{
+            padding: 0.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 0.875rem;
+            outline: none;
+        }}
+
+        table {{ width: 100%; border-collapse: collapse; margin-top: 1rem; }}
+        th {{
+            background: #f8fafc;
+            text-align: left;
+            padding: 0.75rem 1rem;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            font-weight: 600;
+            color: var(--text-secondary);
+            border-bottom: 2px solid var(--border-color);
+        }}
+
+        td {{
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: top;
+        }}
+
+        .severity-badge {{
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 0.25rem 0.5rem;
+            border-radius: 2px;
+            color: white;
+            display: inline-block;
+        }}
+
+        .finding-desc {{ font-weight: 500; margin-bottom: 0.25rem; }}
+        .finding-meta {{ font-size: 0.75rem; color: var(--text-secondary); font-family: 'JetBrains Mono', monospace; }}
+        
+        .compliance-info {{
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px dashed var(--border-color);
+            font-size: 0.75rem;
+        }}
+
+        .compliance-label {{ font-weight: 700; color: var(--accent-primary); }}
+
+        .hidden {{ display: none; }}
+
+        footer {{
+            margin-top: 4rem;
+            padding: 2rem;
+            text-align: center;
+            border-top: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+        }}
+    </style>
 </head>
 <body>
 
-<nav class="navbar">
-  <div class="brand">Git<span>Check</span> &mdash; Security Scan Report</div>
-  <div class="meta">Generated: {timestamp}</div>
-</nav>
+<header class="header">
+    <div class="header-title">GITCHECK SECURITY AUDIT</div>
+    <div class="header-meta">REPORT_ID: {timestamp.replace(' ', '_')} | GENERATED: {timestamp}</div>
+</header>
 
-<div class="page">
+<div class="container">
+    <div class="summary-grid">
+        <div class="card verdict-box {verdict_class}">
+            <div class="verdict-title">Security Verdict</div>
+            <div class="verdict-value">{verdict_label}</div>
+            <div class="header-meta" style="color: inherit">Risk Score: {score}</div>
+        </div>
+        <div class="card">
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-label">Critical</div>
+                    <div class="stat-value" style="color: {SEV_COLORS['CRITICAL']}">{crit_count}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">High</div>
+                    <div class="stat-value" style="color: {SEV_COLORS['HIGH']}">{high_count}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Medium</div>
+                    <div class="stat-value" style="color: {SEV_COLORS['MEDIUM']}">{med_count}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Low</div>
+                    <div class="stat-value" style="color: {SEV_COLORS['LOW']}">{low_count}</div>
+                </div>
+            </div>
+            <div style="margin-top: 1.5rem; font-size: 0.75rem; color: var(--text-secondary)">
+                Scan Target: <strong>{scan_range}</strong>
+            </div>
+        </div>
+    </div>
 
-  <div class="page-title">
-    <h1>Security Audit Report</h1>
-    <p>
-      Repository: <strong>gitcheck</strong> &nbsp;|&nbsp;
-      Branch: <strong>endingIntegration</strong> &nbsp;|&nbsp;
-      Commit range: <strong>HEAD~1 &rarr; HEAD</strong> &nbsp;|&nbsp;
-      Scanned: <strong>{timestamp}</strong>
-    </p>
-  </div>
+    <div class="filter-section">
+        <div class="filter-group">
+            <label for="sevFilter">Severity:</label>
+            <select id="sevFilter" onchange="filterFindings()">
+                <option value="ALL">All Levels</option>
+                <option value="CRITICAL">Critical</option>
+                <option value="HIGH">High</option>
+                <option value="MEDIUM">Medium</option>
+                <option value="LOW">Low</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label for="typeFilter">Scanner:</label>
+            <select id="typeFilter" onchange="filterFindings()">
+                <option value="ALL">All Scanners</option>
+                <option value="Secret Scanner">Secret Scanner</option>
+                <option value="AST / Code Analysis">Code Analysis</option>
+                <option value="Malicious Code Scanner">Malicious Code</option>
+                <option value="IaC Scanner">IaC Scanner</option>
+                <option value="SCA Scanner">SCA Scanner</option>
+                <option value="Container Scanner">Container Scanner</option>
+            </select>
+        </div>
+        <div class="filter-group" style="margin-left: auto;">
+            <input type="text" id="searchFilter" placeholder="Search findings..." onkeyup="filterFindings()">
+        </div>
+    </div>
 
-  <div class="verdict-banner">
-    <div>
-      <h2>Pipeline {verdict_label}</h2>
-      <p>Overall risk score: <strong>{score}</strong> &mdash; {len(all_findings)} finding(s) identified across all scanners.</p>
+    <div class="card" style="padding: 0;">
+        <table id="findingsTable">
+            <thead>
+                <tr>
+                    <th style="width: 100px;">Severity</th>
+                    <th>Vulnerability Details</th>
+                    <th style="width: 250px;">Compliance Reference</th>
+                </tr>
+            </thead>
+            <tbody id="findingsBody">
+                <!-- Data injected by JS -->
+            </tbody>
+        </table>
     </div>
-    <div class="verdict-tag">{verdict_label}</div>
-  </div>
-
-  <div class="stats">
-    <div class="stat">
-      <div class="val">{len(all_findings)}</div>
-      <div class="lbl">Total Findings</div>
-    </div>
-    <div class="stat critical">
-      <div class="val">{crit_count}</div>
-      <div class="lbl">Critical</div>
-    </div>
-    <div class="stat high">
-      <div class="val">{high_count}</div>
-      <div class="lbl">High</div>
-    </div>
-    <div class="stat medium">
-      <div class="val">{med_count}</div>
-      <div class="lbl">Medium</div>
-    </div>
-    <div class="stat low">
-      <div class="val">{low_count}</div>
-      <div class="lbl">Low</div>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-header">
-      <h3>Scan Findings</h3>
-      <span class="badge-count">{len(all_findings)} result(s)</span>
-    </div>
-    <table>
-      <thead>
-        <tr>
-          <th style="width:44px;">#</th>
-          <th style="width:110px;">Severity</th>
-          <th>Description</th>
-          <th style="width:210px;">Scanner</th>
-        </tr>
-      </thead>
-      <tbody>
-        {rows}
-        {no_findings_row}
-      </tbody>
-    </table>
-  </div>
-
-  <div class="card">
-    <div class="card-header">
-      <h3>Scan History</h3>
-      <span class="badge-count">latest run</span>
-    </div>
-    <table>
-      <thead>
-        <tr>
-          <th>Timestamp</th>
-          <th>Commit Range</th>
-          <th>Verdict</th>
-          <th>Findings</th>
-          <th>Risk Score</th>
-        </tr>
-      </thead>
-      <tbody>
-        {history_row}
-      </tbody>
-    </table>
-  </div>
-
-  <div class="card">
-    <div class="card-header">
-      <h3>Scanner Coverage</h3>
-      <span class="badge-count">6 scanners</span>
-    </div>
-    <table>
-      <thead>
-        <tr>
-          <th style="width:220px;">Scanner</th>
-          <th style="width:80px;">Status</th>
-          <th>Description</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr style="border-bottom:1px solid #e2e8f0;">
-          <td style="padding:11px 16px;font-size:13px;font-weight:500;">Secret Scanner</td>
-          <td style="padding:11px 16px;"><span class="scanner-status-ok">PASSED</span></td>
-          <td style="padding:11px 16px;font-size:13px;color:#718096;">Detects hardcoded API keys, tokens, PII, and credentials via regex compliance rules.</td>
-        </tr>
-        <tr style="border-bottom:1px solid #e2e8f0;">
-          <td style="padding:11px 16px;font-size:13px;font-weight:500;">AST / Code Analysis</td>
-          <td style="padding:11px 16px;"><span class="scanner-status-ok">PASSED</span></td>
-          <td style="padding:11px 16px;font-size:13px;color:#718096;">Static analysis using tree-sitter to detect dangerous function calls (eval, exec, os.system, subprocess).</td>
-        </tr>
-        <tr style="border-bottom:1px solid #e2e8f0;">
-          <td style="padding:11px 16px;font-size:13px;font-weight:500;">SCA Scanner</td>
-          <td style="padding:11px 16px;"><span class="scanner-status-ok">PASSED</span></td>
-          <td style="padding:11px 16px;font-size:13px;color:#718096;">Software Composition Analysis &mdash; checks dependencies for banned packages, licenses and authors.</td>
-        </tr>
-        <tr style="border-bottom:1px solid #e2e8f0;">
-          <td style="padding:11px 16px;font-size:13px;font-weight:500;">Container Scanner</td>
-          <td style="padding:11px 16px;"><span class="scanner-status-ok">PASSED</span></td>
-          <td style="padding:11px 16px;font-size:13px;color:#718096;">Analyses Dockerfiles for EOL base images, the latest tag, and root user execution risk.</td>
-        </tr>
-        <tr style="border-bottom:1px solid #e2e8f0;">
-          <td style="padding:11px 16px;font-size:13px;font-weight:500;">IaC Scanner</td>
-          <td style="padding:11px 16px;"><span class="scanner-status-ok">PASSED</span></td>
-          <td style="padding:11px 16px;font-size:13px;color:#718096;">Identifies Terraform and Kubernetes misconfigurations such as public S3 buckets and privileged pods.</td>
-        </tr>
-        <tr>
-          <td style="padding:11px 16px;font-size:13px;font-weight:500;">Malicious Code Scanner</td>
-          <td style="padding:11px 16px;"><span class="scanner-status-ok">PASSED</span></td>
-          <td style="padding:11px 16px;font-size:13px;color:#718096;">Detects reverse shells, data exfiltration, destructive commands, obfuscation, and SSH backdoors.</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-
 </div>
 
 <footer>
-  <strong>GitCheck</strong> &mdash; Automated Security Scanning for CI/CD Pipelines &mdash; {date_only}
+    GITCHECK AUDIT ENGINE | {date_only} | CONFIDENTIAL SECURITY REPORT
 </footer>
 
+<script>
+    const findings = {json.dumps(findings_data)};
+    const sevColors = {json.dumps(SEV_COLORS)};
+
+    function renderTable(data) {{
+        const body = document.getElementById('findingsBody');
+        body.innerHTML = '';
+
+        if (data.length === 0) {{
+            body.innerHTML = '<tr><td colspan="3" style="text-align: center; padding: 3rem; color: var(--text-secondary);">No findings match the selected criteria.</td></tr>';
+            return;
+        }}
+
+        data.forEach(item => {{
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>
+                    <span class="severity-badge" style="background: ${{sevColors[item.severity]}}">${{item.severity}}</span>
+                </td>
+                <td>
+                    <div class="finding-desc">${{item.description}}</div>
+                    <div class="finding-meta">Scanner: ${{item.scanner}}</div>
+                </td>
+                <td>
+                    <div class="compliance-label">${{item.standard}}</div>
+                    <div class="compliance-info">${{item.compliance_desc}}</div>
+                </td>
+            `;
+            body.appendChild(row);
+        }});
+    }}
+
+    function filterFindings() {{
+        const sev = document.getElementById('sevFilter').value;
+        const type = document.getElementById('typeFilter').value;
+        const search = document.getElementById('searchFilter').value.toLowerCase();
+
+        const filtered = findings.filter(item => {{
+            const matchSev = sev === 'ALL' || item.severity === sev;
+            const matchType = type === 'ALL' || item.scanner === type;
+            const matchSearch = item.description.toLowerCase().includes(search) || 
+                               item.scanner.toLowerCase().includes(search) ||
+                               item.standard.toLowerCase().includes(search);
+            return matchSev && matchType && matchSearch;
+        }});
+
+        renderTable(filtered);
+    }}
+
+    // Initial render
+    renderTable(findings);
+</script>
 </body>
 </html>"""
 
     with open(output_path, "w") as fh:
         fh.write(html)
-    print(f"\n[REPORT] HTML report saved -> {output_path}")
+    print(f"\n[AUDIT] Professional security report generated: {output_path}")
+

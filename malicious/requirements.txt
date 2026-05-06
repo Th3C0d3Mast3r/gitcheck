@@ -1,0 +1,14 @@
+# ============================================================
+# TEST FILE: requirements.txt
+# Scanners targeted: SCA Scanner
+# ============================================================
+
+# Legitimate packages (safe)
+flask==2.3.2
+gunicorn==21.2.0
+
+# BANNED: Typosquatting package (CRITICAL)
+requests-v2==1.0.0
+
+# BANNED: Log4Shell risk (CRITICAL)
+log4j==1.2.17

@@ -44,7 +44,6 @@ jobs:
 > GitCheck compares the current commit with its parent to identify changes. A shallow clone (default) might not provide enough history for a proper diff analysis.
 
 ### 2. Local Usage via Docker
-
 You can run GitCheck locally to test your changes before pushing them to GitHub.
 
 ```bash
@@ -55,6 +54,48 @@ docker build -t gitcheck -f docker/Dockerfile .
 # This mounts your current folder to /app inside the container
 docker run --rm -v "$(pwd):/app" gitcheck 1
 ```
+
+### 3. Local Testing (Developer Mode - Ad-hoc)
+If you are developing locally and want to scan specific files or folders without using Docker, use the Python CLI directly.
+
+```bash
+# 1. Activate your virtual environment
+source venv/bin/activate
+
+# 2. Scan a specific file
+python3 cli/main.py 1 malicious.py
+
+# 3. Scan a complete directory (New Feature)
+python3 cli/main.py 1 malicious/
+```
+
+---
+
+## 🔍 Testing Everything in Detail
+
+To verify that all 6 security scanners are functioning correctly, we have provided a `malicious/` test suite. Follow these steps to perform a full system validation:
+
+### Step 1: Prepare the Test Suite
+Ensure the `malicious/` directory contains targets for all scanners:
+- `malicious.py`: Targets **Secret** & **AST** scanners.
+- `evil.sh`: Targets **Malicious Code** scanner.
+- `requirements.txt`: Targets **SCA** scanner.
+- `Dockerfile`: Targets **Container** scanner.
+- `insecure_infra.tf` & `k8s_pod.yaml`: Target **IaC** scanners.
+
+### Step 2: Execute the Validation Scan
+Run the folder-mode scan:
+```bash
+python3 cli/main.py 1 malicious/
+```
+
+### Step 3: Verify the Audit Report
+Open `scan_report.html` and check for:
+1. **Criticality Filters**: Ensure you can filter by "CRITICAL" and "HIGH".
+2. **Scanner Filters**: Ensure you can isolate "IaC Scanner" or "Secret Scanner" results.
+3. **Compliance Mapping**: Verify that findings are mapped to standards like **SOC2**, **NIST**, and **OWASP**.
+
+---
 
 ---
 
@@ -141,4 +182,28 @@ runs:
 
 > [!IMPORTANT]
 > If GitCheck returns a **BLOCK** verdict, the GitHub Action will fail, effectively preventing a Pull Request from being merged if you have "Required Status Checks" enabled.
+
+---
+
+## 🛠️ Advanced GitHub Action Configuration
+
+For complex enterprise environments, you can fine-tune how GitCheck behaves in your CI/CD pipeline.
+
+### Integration with Pull Requests
+To block a merge only if critical vulnerabilities are found, ensure your workflow is triggered on `pull_request` and your branch protection rules require the `security-gate` job to pass.
+
+### Environment Variables
+GitCheck automatically detects if it is running in GitHub Actions and generates a **Job Summary** (Step Summary) in the GitHub UI.
+
+```yaml
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: GitCheck Audit
+        uses: your-username/gitcheck@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+```
 

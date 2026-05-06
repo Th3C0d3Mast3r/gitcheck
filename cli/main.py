@@ -5,7 +5,7 @@ import os    #New change for handling file paths
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import subprocess    #New change for running git commands
-from ingestion import GitIngestion
+from ingestion import GitIngestion, Diff
 from filter import filter_chunks
 from filter.secret_filter import filter_chunks_for_secrets
 from filter.sca_filter import filter_chunks_for_sca
@@ -71,19 +71,71 @@ def generate_github_summary(all_findings, score, verdict):  #New function to cre
         else:
             f.write("✅ No vulnerabilities detected in this push.")
 
-def run_pipeline():
-    print("Starting ingestion phase...")
+def run_pipeline(target=None):
+    # If called via console script, target might be in sys.argv
+    if target is None and len(sys.argv) > 2:
+        target = sys.argv[2]
 
-    ingester=GitIngestion(repo_path=".")
-    try:
-        raw_chunks = ingester.get_diff(base_ref="HEAD~1", head="HEAD")
-        print(f"    -> Found {len(raw_chunks)} total files changed.")
-    except Exception as e:
-        print(f"[!] Error during ingestion: {e}. Are there at least two commits in this repo?")
-        sys.exit(1)
+    print("Starting ingestion phase...")
+    
+    scan_range = "HEAD~1 → HEAD"
+    if target:
+        if os.path.isdir(target):
+            # --- FOLDER MODE: scan every file in the directory ---
+            scan_range = f"Folder: {target}"
+            print(f"[*] Folder mode: scanning all files in '{target}'")
+            raw_chunks = []
+            for fname in sorted(os.listdir(target)):
+                fpath = os.path.join(target, fname)
+                if not os.path.isfile(fpath):
+                    continue
+                try:
+                    with open(fpath, 'r', errors='replace') as f:
+                        content = f.read()
+                    raw_chunks.append(Diff(
+                        file_path=fpath,
+                        old_path=fpath,
+                        change_type="M",
+                        content=content,
+                        added_lines=content.splitlines(),
+                        is_bin=False
+                    ))
+                    print(f"    -> Ingested: {fpath}")
+                except Exception as e:
+                    print(f"    [!] Skipping {fpath}: {e}")
+            print(f"    -> Total: {len(raw_chunks)} files ingested from folder.")
+        else:
+            # --- SINGLE FILE MODE ---
+            scan_range = f"File: {target}"
+            print(f"[*] Targeting specific file: {target}")
+            if not os.path.exists(target):
+                print(f"[!] Error: Target {target} not found.")
+                sys.exit(1)
+            with open(target, 'r', errors='replace') as f:
+                content = f.read()
+            diff_obj = Diff(
+                file_path=target,
+                old_path=target,
+                change_type="M",
+                content=content,
+                added_lines=content.splitlines(),
+                is_bin=False
+            )
+            raw_chunks = [diff_obj]
+            print(f"    -> Ingested target file: {target}")
+    else:
+        ingester=GitIngestion(repo_path=".")
+        try:
+            raw_chunks = ingester.get_diff(base_ref="HEAD~1", head="HEAD")
+            print(f"    -> Found {len(raw_chunks)} total files changed.")
+        except Exception as e:
+            print(f"[!] Error during ingestion: {e}. Are there at least two commits in this repo?")
+            sys.exit(1)
+
 
     print("\n[*] Starting Filtering Phase...")
-
+    # ... (rest of filtering logic stays the same)
+    
     clean_chunks_ast = filter_chunks(raw_chunks)
     clean_chunks_secrets = filter_chunks_for_secrets(raw_chunks)
     clean_chunks_sca = filter_chunks_for_sca(raw_chunks)
@@ -144,13 +196,10 @@ def run_pipeline():
     print("       SCAN RESULTS")
     print("="*30)
     
-    
-    #Modified to generate GitHub summary report even when no findings are found, to ensure visibility in the UI
-    
     if not all_findings:
         print(" All clear, No secrets or malicious code found.")
         generate_github_summary([], 0, "PASS")
-        generate_html_report([], 0, "PASS")
+        generate_html_report([], 0, "PASS", scan_range=scan_range)
         return "PASS"
     else:
         print(f" WARNING! Found {len(all_findings)} issues:")
@@ -168,19 +217,21 @@ def run_pipeline():
         generate_github_summary(all_findings, total_score, verdict)
 
         # 3. Generate local HTML report
-        generate_html_report(all_findings, total_score, verdict)
+        generate_html_report(all_findings, total_score, verdict, scan_range=scan_range)
 
         # 4. Send the verdict back to the main block
         return verdict
 
-if __name__ == "__main__":  #Main block to run the pipeline and handle exit codes based on verdict
+if __name__ == "__main__":
+    # Handle arguments: [1] report_mode, [2] target_file
     user_pref = sys.argv[1] if len(sys.argv) > 1 else "1"
+    target_file = sys.argv[2] if len(sys.argv) > 2 else None
 
     # Step 1: Check if we should skip
     check_reporting_rules()
 
     # Step 2: Run the scan and catch the verdict
-    final_verdict = run_pipeline()
+    final_verdict = run_pipeline(target=target_file)
 
     # Step 3: Handle the Exit Code (This actually stops the CI/CD pipeline)
     if final_verdict == "BLOCK":
