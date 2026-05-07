@@ -1,9 +1,18 @@
 [![Python Tests](https://github.com/Th3C0d3Mast3r/gitcheck/actions/workflows/python-tests.yml/badge.svg)](https://github.com/Th3C0d3Mast3r/gitcheck/actions/workflows/python-tests.yml)  ![Static Badge]( https://img.shields.io/badge/LICENSE-GPL_2.0-white) 
 
 # Git-Check
-The following product can be used in any GitHub repo for checking if the code that has been written (pushed to be merged in the branch), is that **PROPER, & NON-MALICIOUS STUFF**. The below is the overall HLD of the product- do check this out, and the README for understanding- HOW IT WORKS, WHAT ALL IT USES, and related stuff. Also, every directory in this repo has its own README, which can be used to understand what is going in each directory, and what is the use of that-
+With AI and Agentic coming into programming coming into action- many of our codes are well made by those Agents and LLM. This is where repo maintainers face problem- seeing and going through long `git diffs` and one malicious line of code is all it takes for your system to go down and the trust from the Repo flying off! 
+
+This is where Git-Check comes into action. Git-Check is a GitHub Workflows first `git diff` analyzer, which can be even run on the Offline System itself.
+
+> [!IMPORTANT]
+> Git-Check is not some sort of Antivirus which will scan the repository, nor is it an **INTEGRAL PART OF GITHUB**- it is like a plugin which will work **ONLY FOR THOSE REPOS WHERE THE WORKFLOW ACTION IS INTEGRATED** and **IT CHECKS ONLY THE NEW INCOMING DIFFS**- not the previously present code *(assumes, previously it was all going good- and now, you add another layer of security)*
+
+To understand the approach, kindly read and understand the below present HLD of the repository- how we are approaching the problem, what are the stages present, and how we score it. More details are written within every directory's README.
 
 ![HLD of the product](/images/projectHLD.png)
+
+---
 
 ## UNDERSTANDING THE DIRECTORIES' USE
 So, as you can see, the directories in this repo are named- PRETTY OBVIOUSLY, like, every directory does **WHAT IT IS NAMED AS-** 
@@ -18,31 +27,128 @@ So, as you can see, the directories in this repo are named- PRETTY OBVIOUSLY, li
 - [utils/](/utils/) => Common and shared stuff goes here
 - [docker/](/docker/) => Dockerization and other docker related things
 
-<!-- 
-> [!NOTE] 
-> USING THIS REPO THE PROPER WAY
-!-->
+---
+
+## STEPS TO SETUP & USE
+In order to use the following- there are two ways you can integrate and use Git-Check-
+### GitHub Workflows Integration [different ways- choose which pleases]
+1) Directly using my github action from Marketplace-
+```yaml
+- name: GitCheck Security Scan
+  uses: Th3C0d3Mast3r/gitcheck@v1.0   # Prefer stable version instead of @main - check the same from tags
+  with:
+    report_mode: '1'
+```
+
+2) Using Git-Check in your github workflows, you should head to your `.github/workflows` directory, and there, make `gitcheck.yml` as:-
+```yaml
+name: "Security Scan (GitCheck)"
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  security-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Required: GitCheck needs history to analyze the diff
+
+      - name: GitCheck Security Scan
+        uses: Th3C0d3Mast3r/gitcheck@main # Use a specific tag like @v1.0 for stability - refer to my repo tags
+        with:
+          report_mode: '1' # Options: 1 (Always), 2 (Skip Merges), 3 (Never)
+```
+
+### Local Testing 
+You can have a device only check of the git-diff if you are not pushing to GitHub, but jus using local git. For the same, do the following-
+
+1) **Using the Docker Image**:-
+Pull the official `latest` tagged DockerHub image of gitcheck on your device. Check about `gitcheck` image [here]()
+```bash
+# the below commands are made, assuming, there is a docker user present on the Linux. If not, make it. Else, even command should start with- "sudo"
+docker pull dcodemaster/gitcheck:latest
+
+# once pulled- check the image presence by running
+docker images
+
+# and to test, do this-
+docker run --rm \
+  -v $(pwd):/repo \
+  -w /repo \
+  dcodemaster/gitcheck:latest \
+  --report_mode 1 <specific file or folder here. Dont have anything for whole>
+```
+> [!NOTE]
+> - What the above command does it- `-v $(pwd):/repo` → mounts your current project.
+> - `-w /repo` → runs inside your repo.
+> - `--rm` → cleans up container after running.
+
+
+2) **Without Docker image**:
+When you have cloned the repo- then *(not a good thing-cause then you would relative path from `gitcheck` and will have to execute this while being in the gitcheck repo path)*
+```yaml
+# first make the proper venv (if using global pip, no need for venv)
+source venv/bin/activate
+
+# use python3 or python as per the system
+
+# To Scan a specific file
+python3 cli/main.py 1 malicious.py
+
+# To Scan a complete directory (New Feature)
+python3 cli/main.py 1 malicious/
+```
 
 ---
 
-### PROGRESS TILL NOW
-- [x] Written AST Engine for the Parser
-- [x] Base code for `main.py` in /cli written and updated as a Multi-Track Orchestrator
-- [x] Base Dockerfile written in /docker
-- [x] Code for the ingestion of the git-diff written
-- [x] `pyproject.toml` configured, the single point of truth for the project
-- [x] requirements.txt written
-- [x] **Implemented Modular Filtering Pipeline** (AST, Secrets, SCA, Container, IaC)
-- [x] **Implemented Secret Scanner** (Regex matching for API keys, Git leaks, Internal IPs, PII)
-- [x] **Implemented SCA Scanner** (Software Composition Analysis for dependencies)
-- [x] **Implemented Container Scanner** (Dockerfile static analysis & base image rules)
-- [x] **Implemented IaC Scanner** (Terraform and Kubernetes misconfiguration detection)
-- [x] Created JSON-based Compliance Rules Engine (`/config`) for all scanners
-- [ ] Scoring the malicious things (Aggregation Layer)
-- [ ] JSON reporting and overall push score remains (Integrations Layer)
-- [ ] Context-aware taint analysis and dynamic testing (Future Scope)
-- [ ] SAST and DAST based integration in the Jenkinsfile for local vul checking
-
-
-### CHANGELOG
+## CHANGELOG
 The following are the versions of the gitcheck. The github-wokflows marketplace will have the latest of them updated time to time. If not, kindly report the same in the issues.
+|Release Date| Latest | Version  | Description              |
+|------------|--------|----------|--------------------------------------|
+|`TBA`| | v2.0  | Added the optional On-Prem LLM Integration for advanced check |
+|`TBA`| | v1.1   | GitHub Actions made- posted Officially on GitHub Marketplace |
+|`6th May, 2026`|✓| v1.0   | Initial Release with Report Gen and Docker based version |
+
+---
+
+## SECURITY PHILOSOPHY
+Git-Check follows a shift-left security approach, focusing on catching issues as early as possible—right at the stage of code changes.
+
+Instead of scanning the entire repository again and again, **Git-Check focuses on what actually matters**: the incoming `git diff`. This keeps the system fast, relevant, and practical for real-world CI/CD pipelines.
+
+The design is based on a layered detection strategy:
+
+- **Regex-based checks** → for quick pattern detection (API keys, secrets, etc.)
+- **Rule-based checks** → for enforcing security policies
+- **AST-based analysis** → for deeper code understanding
+
+All signals from these layers are combined to form a unified risk perspective, rather than relying on a single detection method.
+
+The core idea is simple:
+> Don’t trust the diff blindly. Verify it before it becomes part of your codebase.
+
+---
+
+## LIMITATIONS
+Git-Check is designed to be **lightweight and diff-focused**, which comes with **certain trade-offs**:
+
+- It **only scans new incoming diffs**, not the entire repository
+- It **assumes** the **existing codebase is already trusted**
+- It requires a valid `.git` history to function correctly
+- It **may produce false positives, especially in regex-based detections**. For the same LLM Based integration is a work in progress.
+- It **does not perform runtime or dynamic analysis** *(no DAST)*
+- It is **not a replacement for full SAST/DAST tools**, but an **additional security layer**
+- Accuracy depends on the rules and patterns configured
+
+> Git-Check is best used as a first line of defense, not the only one.
+
+---
+
+## CONTRIBUTING
+To contribute to the following open-source repository, kindly read the [CONTRIBUTING.md]().
