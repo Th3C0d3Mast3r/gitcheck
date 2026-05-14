@@ -11,6 +11,8 @@ COPY . .
 # Then install the package in editable mode
 RUN pip install -e .
 
+# this is the push for the v1.2 change am making 
+
 RUN useradd -m gitcheck
 USER gitcheck
 
