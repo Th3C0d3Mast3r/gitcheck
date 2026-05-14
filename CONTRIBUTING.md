@@ -1,3 +1,3 @@
 # CONTRIBUTING
 
-[coming soon]
+[coming soon . . ]
