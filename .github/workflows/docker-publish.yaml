@@ -33,6 +33,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
+          dockerfile: ./docker/Dockerfile
           push: true
           tags: |
             dcodemaster/gitcheck:${{ steps.vars.outputs.VERSION }}
