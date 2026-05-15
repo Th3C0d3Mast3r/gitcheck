@@ -3,6 +3,9 @@ FROM python:3.11-slim
 RUN apt-get update && apt-get install -y git gcc python3-dev build-essential
 RUN rm -rf /var/lib/apt/lists/*
 
+# Fix for "dubious ownership" error in GitHub Actions
+RUN git config --global --add safe.directory /github/workspace
+
 WORKDIR /app
 
 # Copy source code FIRST
