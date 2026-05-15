@@ -9,9 +9,14 @@ inputs:
     description: '1: Always, 2: Not on merges, 3: Never'
     required: true
     default: '1'
+  target:
+    description: 'Optional: Specific file or directory to scan (scans diff if empty)'
+    required: false
+    default: ''
 
 runs:
   using: 'docker'
-  image: 'docker://dcodemaster/gitcheck:latest' # Ensure this path is correct relative to root
+  image: 'docker://dcodemaster/gitcheck:latest'
   args:
-    - ${{ inputs.report_mode }} # This passes the choice into the container
+    - ${{ inputs.report_mode }}
+    - ${{ inputs.target }}

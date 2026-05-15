@@ -124,6 +124,12 @@ def run_pipeline(target=None):
             raw_chunks = [diff_obj]
             print(f"    -> Ingested target file: {target}")
     else:
+        # Programmatic fix for "dubious ownership" in GitHub Actions
+        try:
+            subprocess.run(['git', 'config', '--global', '--add', 'safe.directory', '/github/workspace'], check=False)
+        except Exception:
+            pass
+
         ingester=GitIngestion(repo_path=".")
         try:
             raw_chunks = ingester.get_diff(base_ref="HEAD~1", head="HEAD")
