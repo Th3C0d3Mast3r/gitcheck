@@ -8,6 +8,8 @@ version="0.1.0"
 dependencies = [
     "gitpython",
     "tree-sitter",
+    "tree-sitter-python",
+    "tree-sitter-javascript",
     "pyyaml",
     "click",
     "rich",
@@ -18,7 +20,7 @@ gitcheck="cli.main:run_pipeline"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["cli*"]
+include = ["cli*", "analysis*", "filter*", "ingestion*", "aggregation*"]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
