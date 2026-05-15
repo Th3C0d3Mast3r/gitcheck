@@ -8,14 +8,14 @@ WORKDIR /app
 # Copy source code FIRST
 COPY . .
 
-# Then install the package in editable mode
-RUN pip install -e .
+# Then install the package
+RUN pip install .
 
-# this is the push for the v1.2 change am making 
+# Removing USER gitcheck because GitHub Actions requires the container to run as root 
+# to access GITHUB_WORKSPACE and execute successfully.
+# RUN useradd -m gitcheck
+# USER gitcheck
 
-RUN useradd -m gitcheck
-USER gitcheck
-
-ENTRYPOINT ["gitcheck"]
-
-# ENTRYPOINT ["python", "/app/main.py"]  Can we add this??
+# Use python to run the script so the __main__ block is executed
+# This ensures that exit codes (sys.exit(1) for BLOCK) are properly caught by the CI/CD pipeline
+ENTRYPOINT ["python", "/app/cli/main.py"]
