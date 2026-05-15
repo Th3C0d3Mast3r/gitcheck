@@ -135,8 +135,13 @@ def run_pipeline(target=None):
             raw_chunks = ingester.get_diff(base_ref="HEAD~1", head="HEAD")
             print(f"    -> Found {len(raw_chunks)} total files changed.")
         except Exception as e:
-            print(f"[!] Error during ingestion: {e}. Are there at least two commits in this repo?")
-            sys.exit(1)
+            print(f"\n[!] Git Ingestion failed: {e}")
+            print("[*] This usually happens due to a 'shallow clone' (fetch-depth: 1) in GitHub Actions.")
+            print("[*] FALLBACK: Scanning the entire repository for maximum security...")
+            
+            # Re-running the pipeline with target="." (the current directory)
+            # This ensures the scanner works even without git history!
+            return run_pipeline(target=".")
 
 
     print("\n[*] Starting Filtering Phase...")
