@@ -245,9 +245,9 @@ if __name__ == "__main__":
     final_verdict = run_pipeline(target=target_file)
 
     # Step 3: Handle the Exit Code (This actually stops the CI/CD pipeline)
-    if final_verdict == "BLOCK":
-        print("\n[!] VERDICT IS BLOCK. FAILING PIPELINE.")
+    if final_verdict in ["BLOCK", "WARN"]:
+        print(f"\n[!] VERDICT IS {final_verdict}. FAILING PIPELINE.")
         sys.exit(1)
     else:
-        print("\n[✓] VERDICT IS PASS/WARN. PIPELINE SUCCEEDED.")
+        print("\n[✓] VERDICT IS PASS. PIPELINE SUCCEEDED.")
         sys.exit(0)
