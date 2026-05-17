@@ -60,7 +60,7 @@ def generate_github_summary(all_findings, score, verdict):  #New function to cre
 
     with open(summary_env, 'a') as f:
         f.write(f"## 🛡️ GitCheck Security Scan\n")
-        color = "🔴" if verdict == "BLOCK" else "🟢"
+        color = "🔴" if verdict == "BLOCK" or verdict == "WARN" else "🟢"
         f.write(f"### Verdict: {color} {verdict} (Score: {score}/100)\n\n")
         
         if all_findings:
