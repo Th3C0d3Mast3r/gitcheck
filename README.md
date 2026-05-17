@@ -1,8 +1,31 @@
-[![Tests](https://img.shields.io/github/actions/workflow/status/Th3C0d3Mast3r/gitcheck/python-tests.yml?label=tests&logo=github&style=for-the-badge)](https://github.com/Th3C0d3Mast3r/gitcheck/actions) [![Build & Push Docker Image](https://github.com/Th3C0d3Mast3r/gitcheck/actions/workflows/docker-publish.yaml/badge.svg)](https://github.com/Th3C0d3Mast3r/gitcheck/actions/workflows/docker-publish.yaml) [![Docker Pulls](https://img.shields.io/docker/pulls/dcodemaster/gitcheck?logo=docker&style=for-the-badge)](https://hub.docker.com/r/dcodemaster/gitcheck) [![Docker Version](https://img.shields.io/docker/v/dcodemaster/gitcheck/latest?logo=docker&style=for-the-badge)](https://hub.docker.com/r/dcodemaster/gitcheck) [![Git Tag](https://img.shields.io/github/v/tag/Th3C0d3Mast3r/gitcheck?logo=git&style=for-the-badge)](https://github.com/Th3C0d3Mast3r/gitcheck/tags) [![License](https://img.shields.io/badge/license-GPL%202.0-blue?logo=gnu&style=for-the-badge)](https://github.com/Th3C0d3Mast3r/gitcheck)
-# Git-Check
-With AI and Agentic coming into programming coming into action- many of our codes are well made by those Agents and LLM. This is where repo maintainers face problem- seeing and going through long `git diffs` and one malicious line of code is all it takes for your system to go down and the trust from the Repo flying off! 
+<div align="center">
 
-This is where Git-Check comes into action. Git-Check is a GitHub Workflows first `git diff` analyzer, which can be even run on the Offline System itself.
+[![Tests](https://github.com/Th3C0d3Mast3r/gitcheck/actions/workflows/python-tests.yml/badge.svg)](https://github.com/Th3C0d3Mast3r/gitcheck/actions/workflows/python-tests.yml)
+[![Build & Push Docker Image](https://github.com/Th3C0d3Mast3r/gitcheck/actions/workflows/docker-publish.yaml/badge.svg)](https://github.com/Th3C0d3Mast3r/gitcheck/actions/workflows/docker-publish.yaml)
+[![Docker Pulls](https://img.shields.io/docker/pulls/dcodemaster/gitcheck.svg?logo=docker)](https://hub.docker.com/r/dcodemaster/gitcheck)
+[![Docker Version](https://img.shields.io/docker/v/dcodemaster/gitcheck/latest.svg?logo=docker)](https://hub.docker.com/r/dcodemaster/gitcheck)
+[![Git Tag](https://img.shields.io/github/v/tag/Th3C0d3Mast3r/gitcheck.svg?logo=git)](https://github.com/Th3C0d3Mast3r/gitcheck/tags)
+[![License](https://img.shields.io/badge/license-GPL%202.0-blue.svg?logo=gnu)](https://github.com/Th3C0d3Mast3r/gitcheck)
+
+# 🛡️ Git-Check
+
+### *AI-powered `git diff` security analysis for modern repositories
+
+*Catch suspicious changes before they reach production.*
+
+</div>
+
+---
+
+With AI and agentic coding becoming a major part of modern software development, repository maintainers are increasingly reviewing large AI-generated pull requests and massive `git diff` outputs.
+
+One malicious line of code is often enough to compromise a system, introduce vulnerabilities, or silently erode trust in a project.
+
+**Git-Check** is a GitHub Workflows-first `git diff` analyzer designed to help maintainers detect risky, suspicious, or unexpected code changes quickly and efficiently.
+
+It can run directly inside GitHub Actions or entirely offline for high-security and air-gapped environments.
+
+---
 
 > [!IMPORTANT]
 > Git-Check is not some sort of Antivirus which will scan the repository, nor is it an **INTEGRAL PART OF GITHUB**- it is like a plugin which will work **ONLY FOR THOSE REPOS WHERE THE WORKFLOW ACTION IS INTEGRATED** and **IT CHECKS ONLY THE NEW INCOMING DIFFS**- not the previously present code *(assumes, previously it was all going good- and now, you add another layer of security)*
@@ -39,29 +62,27 @@ In order to use the following- there are two ways you can integrate and use Git-
     report_mode: '1'
 ```
 
-2) Using Git-Check in your github workflows, you should head to your `.github/workflows` directory, and there, make `gitcheck.yml` as:-
+2) ✅ Using Git-Check in your github workflows, you should head to your `.github/workflows` directory, and there, make `gitcheck.yml` as:-
 ```yaml
-name: "Security Scan (GitCheck)"
+name: Security Analysis
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ "main" ]
   pull_request:
-    branches: [ main, master ]
+    branches: [ "main" ]
 
 jobs:
-  security-gate:
+  scan:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Repository
+      - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0 # Required: GitCheck needs history to analyze the diff
 
       - name: GitCheck Security Scan
-        uses: Th3C0d3Mast3r/gitcheck@main # Use a specific tag like @v1.0 for stability - refer to my repo tags
+        uses: docker://dcodemaster/gitcheck:latest
         with:
-          report_mode: '1' # Options: 1 (Always), 2 (Skip Merges), 3 (Never)
+          report_mode: '1'
 ```
 
 ### Local Testing 
@@ -111,8 +132,8 @@ The following are the versions of the gitcheck. The github-wokflows marketplace 
 |Release Date| Latest | Version  | Description              |
 |------------|--------|----------|--------------------------------------|
 |`TBA`| | v2.0  | Added the optional On-Prem LLM Integration for advanced check |
-|`TBA`| | v1.1   | GitHub Actions made- posted Officially on GitHub Marketplace |
-|`6th May, 2026`|✓| v1.0   | Initial Release with Report Gen and Docker based version |
+|`15th May, 2026`|✓| v1.2.8 | Stable Working GitHub Action with Proper Scoring on other repo (tested on [HSL](https://github.com/Th3C0d3Mast3r/HSL) )|
+|`6th May, 2026`| | v1.0   | Initial Release with Report Gen and Docker based version |
 
 ---
 
