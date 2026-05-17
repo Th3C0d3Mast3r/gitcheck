@@ -207,3 +207,4 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
+<!-- making this change for tag v1.2.10 -->
