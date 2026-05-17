@@ -2,7 +2,10 @@ import os
 from typing import List
 from ingestion import Diff
 
-MALICIOUS_EXTENSIONS = {".sh", ".bash", ".zsh", ".bat", ".ps1", ".ps", ".json", ".yml", ".yaml", ".toml"}
+MALICIOUS_EXTENSIONS = {
+    ".sh", ".bash", ".zsh", ".bat", ".ps1", ".ps", ".json", ".yml", ".yaml", ".toml",
+    ".py", ".php", ".rb", ".pl", ".js", ".vbs", ".cmd", ".exe", ".com", ".dll", ".psd1"
+}
 MALICIOUS_FILENAMES = {"makefile", "tox.ini", "package.json"}
 
 def should_inspect_for_malicious(chunk: Diff) -> bool:

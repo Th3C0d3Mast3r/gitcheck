@@ -1,4 +1,9 @@
 {
+  "EICAR Test File": {
+    "regex": "X5O!P%@AP\\[4\\\\PZX54\\(P\\^\\)7CC\\)7\\}\\$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!\\$H\\+H\\*",
+    "severity": "CRITICAL",
+    "description": "EICAR standard antivirus test file detected."
+  },
   "Reverse Shell (Bash)": {
     "regex": "bash\\s+-i\\s+>&\\s+/dev/tcp/\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}/\\d+",
     "severity": "CRITICAL",
@@ -8,6 +13,21 @@
     "regex": "nc\\s+-e\\s+/bin/(ba)?sh\\s+\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}",
     "severity": "CRITICAL",
     "description": "Reverse shell connection detected via netcat."
+  },
+  "Reverse Shell (Python)": {
+    "regex": "python\\s+-c\\s+['\"]import\\s+socket,subprocess,os",
+    "severity": "CRITICAL",
+    "description": "Reverse shell connection detected via Python."
+  },
+  "Reverse Shell (PHP)": {
+    "regex": "php\\s+-r\\s+['\"]\\$sock=fsockopen\\(",
+    "severity": "CRITICAL",
+    "description": "Reverse shell connection detected via PHP."
+  },
+  "Reverse Shell (PowerShell)": {
+    "regex": "powershell.*-NoP.*-W\\s+Hidden.*-enc|New-Object\\s+System\\.Net\\.Sockets\\.TCPClient",
+    "severity": "CRITICAL",
+    "description": "Reverse shell connection detected via PowerShell."
   },
   "Data Exfiltration (Curl/Wget)": {
     "regex": "(curl|wget).*\\|\\s*(bash|sh|zsh)",
@@ -19,6 +39,11 @@
     "severity": "CRITICAL",
     "description": "Exfiltrating sensitive local files via curl/wget."
   },
+  "Suspicious Curl/Wget Execution": {
+    "regex": "(curl|wget).*-(o|O).*\\.(sh|py|pl|rb|exe|dll)|(curl|wget).*-sL?.*\\|.*(bash|sh|zsh)",
+    "severity": "HIGH",
+    "description": "Suspicious curl or wget command downloading and/or executing potentially malicious files."
+  },
   "Destructive Command (rm -rf)": {
     "regex": "rm\\s+-rf\\s+/",
     "severity": "CRITICAL",
@@ -28,6 +53,31 @@
     "regex": "echo\\s+.*\\s+\\|\\s+base64\\s+-d\\s+\\|\\s*(sh|bash)",
     "severity": "HIGH",
     "description": "Execution of base64 decoded payload."
+  },
+  "Obfuscated Base64 String": {
+    "regex": "(eval\\(base64_decode\\(|[A-Za-z0-9+/]{100,}={0,2})",
+    "severity": "HIGH",
+    "description": "Large base64 string or decoding function indicating obfuscation."
+  },
+  "Hex-Encoded Payload": {
+    "regex": "(?:\\\\x[0-9a-fA-F]{2}){4,}",
+    "severity": "HIGH",
+    "description": "Sequence of hex-encoded bytes often used for shellcode."
+  },
+  "Suspicious C2 Server IP": {
+    "regex": "\\b(?:[0-9]{1,3}\\.){3}[0-9]{1,3}:(?:4444|1337|31337|8080|8443|443)\\b",
+    "severity": "HIGH",
+    "description": "IP address with suspicious port commonly used by command-and-control servers."
+  },
+  "System Hosts File Modification": {
+    "regex": "(echo.*>>.*\\/etc\\/hosts|Add-Content.*System32\\\\\\\\drivers\\\\\\\\etc\\\\\\\\hosts)",
+    "severity": "HIGH",
+    "description": "Modification of system hosts file for DNS redirection."
+  },
+  "Windows Registry Modification": {
+    "regex": "(reg\\s+add\\s+.*HKCU\\\\\\\\Software\\\\\\\\Microsoft\\\\\\\\Windows\\\\\\\\CurrentVersion\\\\\\\\Run|Set-ItemProperty\\s+.*HKCU:\\\\\\\\Software\\\\\\\\Microsoft\\\\\\\\Windows\\\\\\\\CurrentVersion\\\\\\\\Run)",
+    "severity": "CRITICAL",
+    "description": "Windows registry modification, potentially for persistence."
   },
   "Persistence (Cron)": {
     "regex": "echo\\s+.*\\s+>>\\s+/etc/crontab",
