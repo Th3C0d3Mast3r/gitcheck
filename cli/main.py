@@ -81,29 +81,33 @@ def run_pipeline(target=None):
     scan_range = "HEAD~1 → HEAD"
     if target:
         if os.path.isdir(target):
-            # --- FOLDER MODE: scan every file in the directory ---
+            # --- FOLDER MODE: scan every file under the directory recursively ---
             scan_range = f"Folder: {target}"
-            print(f"[*] Folder mode: scanning all files in '{target}'")
+            print(f"[*] Folder mode: scanning all files under '{target}' recursively")
             raw_chunks = []
-            for fname in sorted(os.listdir(target)):
-                fpath = os.path.join(target, fname)
-                if not os.path.isfile(fpath):
-                    continue
-                try:
-                    with open(fpath, 'r', errors='replace') as f:
-                        content = f.read()
-                    raw_chunks.append(Diff(
-                        file_path=fpath,
-                        old_path=fpath,
-                        change_type="M",
-                        content=content,
-                        added_lines=content.splitlines(),
-                        is_bin=False
-                    ))
-                    print(f"    -> Ingested: {fpath}")
-                except Exception as e:
-                    print(f"    [!] Skipping {fpath}: {e}")
-            print(f"    -> Total: {len(raw_chunks)} files ingested from folder.")
+            excluded_dirs = {'.git', '.hg', '.svn', '__pycache__', '.pytest_cache', '.venv', 'venv'}
+
+            for dirpath, dirnames, filenames in os.walk(target):
+                dirnames[:] = [d for d in dirnames if d not in excluded_dirs]
+                for fname in sorted(filenames):
+                    fpath = os.path.join(dirpath, fname)
+                    if not os.path.isfile(fpath):
+                        continue
+                    try:
+                        with open(fpath, 'r', errors='replace') as f:
+                            content = f.read()
+                        raw_chunks.append(Diff(
+                            file_path=fpath,
+                            old_path=fpath,
+                            change_type="M",
+                            content=content,
+                            added_lines=content.splitlines(),
+                            is_bin=False
+                        ))
+                        print(f"    -> Ingested: {fpath}")
+                    except Exception as e:
+                        print(f"    [!] Skipping {fpath}: {e}")
+            print(f"    -> Total: {len(raw_chunks)} files ingested from folder recursively.")
         else:
             # --- SINGLE FILE MODE ---
             scan_range = f"File: {target}"

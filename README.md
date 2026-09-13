@@ -132,7 +132,8 @@ The following are the versions of the gitcheck. The github-wokflows marketplace 
 |Release Date| Latest | Version  | Description              |
 |------------|--------|----------|--------------------------------------|
 |`TBA`| | v2.0  | Added the optional On-Prem LLM Integration for advanced check |
-|`15th May, 2026`|✓| v1.2.8 | Stable Working GitHub Action with Proper Scoring on other repo (tested on [HSL](https://github.com/Th3C0d3Mast3r/HSL) )|
+|`13th Sep, 2026`|✓| v1.3.0 | Recursive directory scanning and Docker release automation for newer Docker Hub versions |
+|`15th May, 2026`|| v1.2.8 | Stable Working GitHub Action with Proper Scoring on other repo (tested on [HSL](https://github.com/Th3C0d3Mast3r/HSL) )|
 |`6th May, 2026`| | v1.0   | Initial Release with Report Gen and Docker based version |
 
 ---
